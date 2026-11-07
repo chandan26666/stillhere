@@ -232,3 +232,116 @@ def alpha_metrics(data, fs, channel_names, channels=None, mains_hz=60.0):
     f = spec[:, flank].mean(axis=1)
     return {"power": float(np.mean(np.log(np.maximum(a, 1e-9)))),
             "prom": float(np.mean(a / np.maximum(f, 1e-9)))}
+
+
+# Thresholds for sensor_report(), in microvolts. Set from real Core-4
+# recordings: well-seated dry sensors read about 7-10 uV in 3-40 Hz, 11-14 uV
+# of slow drift, 2-5 uV of 45-55 Hz muscle, 46-107 uV of 60 Hz hum and jumps
+# under 160 uV; slipping sensors read 1,000-5,400 / 2,200-23,600 / 52-515 /
+# 340-2,700 / 3,000-10,800.
+SENSOR_LIMITS = {"best": 30.0, "usable": 100.0, "drift": 150.0, "muscle": 15.0,
+                 "hum": 250.0, "jump": 800.0, "rail": 199000.0}
+
+
+def _band_sd(x, lo, hi, fs):
+    from scipy.signal import sosfiltfilt
+    sos = butter(4, [lo, hi], btype="bandpass", fs=fs, output="sos")
+    return sosfiltfilt(sos, x, axis=-1).std(axis=-1)
+
+
+def sensor_report(raw: np.ndarray, fs: float, channel_names: list[str],
+                  seconds: float, mains_hz: float = 60.0) -> dict:
+    """Is each sensor working? Plain-language answer for the "Check my
+    sensors" button.
+
+    raw: (channels, samples) of unfiltered microvolts from the last `seconds`.
+    Each sensor gets a status:
+      "good" = working perfectly, "fair" = usable but could be better,
+      "bad" = too noisy to use, "flat" = no signal, "off" = not touching.
+    The test can run when at least 2 sensors are "good" or "fair" (the same
+    rule as step 1 of every test).
+    """
+    L = SENSOR_LIMITS
+    n = raw.shape[-1] if raw.ndim == 2 else 0
+    expected = int(seconds * fs)
+    base = {"seconds": seconds, "samples": int(n), "expected": expected,
+            "limits": L}
+    if n < 0.5 * expected or n < 2 * fs:
+        return {**base, "verdict": "no_data", "sensors": [], "n_ok": 0,
+                "title": "The headset isn't sending data",
+                "detail": f"Got {n} of {expected} samples. Check the amplifier is on "
+                          "(fading light), charged and close to the laptop, then "
+                          "restart scripts/stream_core.py."}
+    x = np.asarray(raw, dtype=float)
+    xd = x - x.mean(axis=-1, keepdims=True)
+    level = preprocess(x, fs, mains_hz).std(axis=-1)
+    drift = _band_sd(xd, 0.5, 3.0, fs)
+    muscle = _band_sd(xd, 45.0, min(55.0, fs / 2 - 1), fs)
+    hum = _band_sd(xd, mains_hz - 2, min(mains_hz + 2, fs / 2 - 1), fs)
+    b, a = butter(4, [1.0, 45.0], btype="bandpass", fs=fs)
+    jump = np.abs(np.diff(filtfilt(b, a, xd, axis=-1), axis=-1)).max(axis=-1)
+    railed = (np.abs(x) > L["rail"]).mean(axis=-1) > 0.5
+
+    sensors = []
+    for i, name in enumerate(channel_names):
+        lv = float(level[i])
+        problems, fixes = [], []
+        if railed[i]:
+            status = "off"
+            problems.append("Not touching the head: the amplifier input is maxed out.")
+            fixes.append("Part the hair under this sensor and press it onto the scalp.")
+        elif lv < 0.5:
+            status = "flat"
+            problems.append("No signal at all.")
+            fixes.append("Re-seat this sensor so the pins reach the scalp.")
+        else:
+            if drift[i] > L["drift"]:
+                problems.append("Drifting: the sensor is moving or rocking on hair.")
+                fixes.append("Snug the band and rest your head back so it can't rock.")
+            if jump[i] > L["jump"]:
+                problems.append("Sudden jumps: contact is slipping on and off.")
+                fixes.append("Part the hair under it and press it in.")
+            if hum[i] > L["hum"]:
+                problems.append("Picking up power-line hum: weak contact.")
+                fixes.append("Press it closer to the skin; wait a minute for it to settle.")
+            if muscle[i] > L["muscle"]:
+                problems.append("Muscle noise from the jaw, neck or forehead.")
+                fixes.append("Relax your jaw and neck; unclench your teeth.")
+            if lv > L["usable"]:
+                status = "bad"
+                if not problems:
+                    problems.append("Far too noisy for brain signals.")
+                    fixes.append("Re-seat this sensor and sit still.")
+            elif lv > L["best"] or problems:
+                status = "fair"
+                if not problems:
+                    problems.append("A bit noisy, but usable.")
+                    fixes.append("Sit still for a minute; dry sensors settle with time.")
+            else:
+                status = "good"
+        sensors.append({"name": name, "label": f"Sensor {i + 1}", "status": status,
+                        "level_uv": round(lv, 1), "drift_uv": round(float(drift[i]), 1),
+                        "muscle_uv": round(float(muscle[i]), 1), "hum_uv": round(float(hum[i]), 1),
+                        "jump_uv": round(float(jump[i]), 1), "problems": problems,
+                        "fixes": list(dict.fromkeys(fixes))})
+
+    good = [s for s in sensors if s["status"] == "good"]
+    usable = [s for s in sensors if s["status"] in ("good", "fair")]
+    total = len(sensors)
+    if len(good) == total:
+        verdict, title = "perfect", f"All {total} sensors are working perfectly"
+        detail = "Clean signal on every sensor. You're ready to run a test."
+    elif len(usable) >= 2:
+        verdict = "ready"
+        title = f"{len(usable)} of {total} sensors are working: ready to test"
+        weak = total - len(good)
+        detail = (f"Tests need at least 2 working sensors. {weak} "
+                  f"{'is' if weak == 1 else 'are'} a bit noisy: fixing "
+                  f"{'it' if weak == 1 else 'them'} gives a stronger signal.")
+    else:
+        verdict = "not_ready"
+        title = f"Not ready: {len(usable)} of {total} sensors working"
+        detail = ("Tests need at least 2 working sensors, or they stop with "
+                  "\"Not interpretable\". Fix the sensors below and check again.")
+    return {**base, "verdict": verdict, "title": title, "detail": detail,
+            "sensors": sensors, "n_ok": len(usable), "n_good": len(good)}

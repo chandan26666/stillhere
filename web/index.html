@@ -313,6 +313,61 @@
   @media (prefers-reduced-motion: reduce) { .live-dot.on { animation: none; } .lr i { transition: none; } }
   .brainkey { display: flex; justify-content: space-between; gap: 8px; font: 11.5px var(--font-mono); color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
   .brainkey b.l { color: var(--left); font-weight: 600; } .brainkey b.r { color: var(--right); font-weight: 600; }
+  /* "Check my sensors" button + report */
+  .sensbtn { display: flex; align-items: center; gap: 12px; width: 100%; margin: 14px 0 0; padding: 13px 16px; border-radius: 8px; cursor: pointer; text-align: left;
+             color: var(--text); border: 1px solid rgba(75,227,143,.55); background: linear-gradient(180deg, rgba(75,227,143,.14), rgba(75,227,143,.05)); }
+  .sensbtn:hover:not(:disabled) { background: linear-gradient(180deg, rgba(75,227,143,.22), rgba(75,227,143,.08)); }
+  .sensbtn:disabled { opacity: .45; cursor: default; }
+  .sensbtn svg { flex: none; width: 30px; height: 30px; }
+  .sensbtn b { display: block; font: 700 15px var(--font-display); letter-spacing: .04em; }
+  .sensbtn span { display: block; font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+  .gstep.link { cursor: pointer; } .gstep.link:hover { border-color: var(--line-strong); }
+  #sens { position: fixed; inset: 0; z-index: 21; display: none; overflow: auto; background: rgba(4,8,20,.92); backdrop-filter: blur(6px); }
+  #sens.on { display: block; }
+  .sbox { max-width: 1040px; margin: 5vh auto; background: var(--panel); border: 1px solid var(--line-strong); border-radius: 14px; padding: 28px 32px; }
+  .shead { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .shead .kick { font: 600 12px var(--font-display); letter-spacing: .18em; color: var(--muted); text-transform: uppercase; }
+  .sx { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 8px; width: 36px; height: 36px; cursor: pointer; font-size: 18px; }
+  .sx:hover { color: var(--text); border-color: var(--line-strong); }
+  .smeas { display: grid; grid-template-columns: 170px 1fr; gap: 28px; align-items: center; padding: 26px 0 8px; }
+  .sring { width: 170px; height: 170px; }
+  .sring .trk { stroke: var(--line); } .sring .arc { stroke: var(--good); transition: stroke-dashoffset 1s linear; }
+  .sring text { fill: var(--text); font: 700 46px var(--font-display); }
+  .smeas h2 { font: 700 30px var(--font-display); margin: 0 0 10px; }
+  .smeas ul { margin: 0; padding-left: 20px; color: #c9d2f2; font-size: 16px; line-height: 1.7; }
+  .verdict { display: grid; grid-template-columns: 64px 1fr; gap: 18px; align-items: center; margin: 22px 0 20px; padding: 18px 20px; border-radius: 12px; border: 1px solid; }
+  .verdict .vi { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font: 700 28px var(--font-display); color: #061019; }
+  .verdict h2 { font: 700 26px var(--font-display); margin: 0 0 4px; line-height: 1.2; }
+  .verdict p { margin: 0; color: #c9d2f2; font-size: 15px; line-height: 1.5; }
+  .verdict.perfect { border-color: rgba(75,227,143,.5); background: rgba(75,227,143,.07); } .verdict.perfect .vi { background: var(--good); } .verdict.perfect h2 { color: var(--good); }
+  .verdict.ready { border-color: rgba(255,204,77,.5); background: rgba(255,204,77,.06); } .verdict.ready .vi { background: var(--warn); } .verdict.ready h2 { color: var(--warn); }
+  .verdict.not_ready, .verdict.no_data { border-color: rgba(255,107,107,.5); background: rgba(255,107,107,.07); }
+  .verdict.not_ready .vi, .verdict.no_data .vi { background: var(--bad); } .verdict.not_ready h2, .verdict.no_data h2 { color: var(--bad); }
+  .stiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .stile { border: 1px solid var(--line); border-top: 4px solid var(--muted); border-radius: 10px; padding: 14px 14px 12px; background: #0b1430; }
+  .stile.good { border-top-color: var(--good); } .stile.fair { border-top-color: var(--warn); }
+  .stile.bad, .stile.off, .stile.flat { border-top-color: var(--bad); }
+  .stile h3 { margin: 0; font: 700 17px var(--font-display); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .pill { font: 600 11px var(--font-body); padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill.good { background: rgba(75,227,143,.16); color: var(--good); } .pill.fair { background: rgba(255,204,77,.16); color: var(--warn); }
+  .pill.bad, .pill.off, .pill.flat { background: rgba(255,107,107,.16); color: var(--bad); }
+  .lvl { margin: 14px 0 4px; font: 600 24px var(--font-mono); } .lvl small { font: 12px var(--font-body); color: var(--muted); }
+  .meter { position: relative; height: 10px; border-radius: 5px; display: flex; margin: 6px 0 2px; }
+  .meter i { display: block; height: 100%; } .meter i:first-child { border-radius: 5px 0 0 5px; } .meter i:last-of-type { border-radius: 0 5px 5px 0; }
+  .meter .z1 { background: rgba(75,227,143,.35); } .meter .z2 { background: rgba(255,204,77,.32); } .meter .z3 { background: rgba(255,107,107,.3); }
+  .meter b { position: absolute; top: -3px; width: 3px; height: 16px; margin-left: -1.5px; background: var(--text); border-radius: 2px; box-shadow: 0 0 0 2px #0b1430; }
+  .mscale { position: relative; height: 12px; font: 10px var(--font-mono); color: var(--muted); }
+  .mscale span { position: absolute; transform: translateX(-50%); } .mscale span:first-child { transform: none; } .mscale span:last-child { transform: translateX(-100%); }
+  .sprob { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 13px; line-height: 1.45; }
+  .sprob li { color: #c9d2f2; } .sprob li.fix { color: var(--text); } .sprob li.fix::before { content: "→ "; color: var(--brand); font-weight: 700; }
+  .sprob li.ok { color: var(--good); }
+  .snums { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; font: 11px var(--font-mono); color: var(--muted); }
+  .snums em { font-style: normal; } .snums em.hi { color: var(--warn); }
+  .sfoot { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 22px; border-top: 1px solid var(--line); padding-top: 16px; flex-wrap: wrap; }
+  .sfoot p { margin: 0; font-size: 12.5px; color: var(--muted); max-width: 560px; line-height: 1.5; }
+  .sfoot .go { width: auto; margin: 0; padding: 13px 26px; }
+  @media (max-width: 980px) { .stiles { grid-template-columns: 1fr 1fr; } .smeas { grid-template-columns: 1fr; justify-items: center; } }
+  @media (max-width: 560px) { .stiles { grid-template-columns: 1fr; } .sbox { padding: 20px 16px; margin: 0; border-radius: 0; } }
 </style>
 </head>
 <body>
@@ -468,6 +523,10 @@
       <div class="legend">
         <div><span><i style="background:var(--good)"></i>good</span><span><i style="background:var(--warn)"></i>flat</span><span><i style="background:var(--bad)"></i>noisy</span></div>
       </div>
+      <button class="sensbtn" id="bSensors" disabled>
+        <svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="13" fill="none" stroke="var(--good)" stroke-width="2"/><path d="M5 16h4l3-7 4 13 3-9 2 3h4" fill="none" stroke="var(--good)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div><b>Check my sensors</b><span>8 seconds · tells you which sensors work and how to fix the rest</span></div>
+      </button>
     </section>
 
     <section class="card sig-card">
@@ -528,6 +587,11 @@ Do cars grow on trees? | no</textarea>
 
   </div>
 </div>
+
+<div id="sens" role="dialog" aria-modal="true" aria-labelledby="sensKick"><div class="sbox">
+  <div class="shead"><div class="kick" id="sensKick">Sensor check</div><button class="sx" id="sensX" aria-label="Close">×</button></div>
+  <div id="sensBody"></div>
+</div></div>
 
 <div id="intro"><div class="ibox">
   <div class="itop"><div><div class="kicker" id="iKick">Before you start</div><h2 id="iTitle">Command test</h2><div class="itime" id="iTime"></div></div>
@@ -863,13 +927,16 @@ Do cars grow on trees? | no</textarea>
       $('liveDot').className = 'live-dot on'; $('chInfo').textContent = `${m.channels.length} ch · ${m.fs} Hz`;
       if (m.min_gap_h != null) { minGap = m.min_gap_h; sitText(); }
       guide.connected = true; updateGuide();
-      btns.forEach(b => b.disabled = false);
+      btns.forEach(b => b.disabled = false); sensBusy = false; $('bSensors').disabled = false;
     } else if (m.type === 'trace') { guide.total = m.names.length; guide.sensors = m.names.filter(n => m.quality[n] === 'ok').length; updateGuide(); if (state === 'idle' && !panel.classList.contains('hidden')) drawAll(m); else lastTrace = m;
     } else if (m.type === 'trial') { startTrial(m);
     } else if (m.type === 'live') { if (trial && trial.mode.startsWith('eyesclosed')) return; if (m.score) hudMeter(m.score.snr); else hudMsg(`Collecting data... ${m.n_samples} samples`);
     } else if (m.type === 'trial_done') { hudMeter(null);
       hudMsg(trial && trial.mode.startsWith('eyesclosed') ? 'Rest · keep your eyes closed' : m.score ? `Rest · blink and relax\nL ${f2(m.score.snr.left)} · R ${f2(m.score.snr.right)}` : 'Rest · blink and relax');
       setTimeout(() => { hudMsg(''); send({ type: 'ready' }); }, 3000);
+    } else if (m.type === 'sensor_progress') { if ($('sens').classList.contains('on')) renderMeasuring(m.left, m.total);
+    } else if (m.type === 'sensor_report') { sensBusy = false; $('bSensors').disabled = !guide.connected;
+      $('sens').classList.add('on'); renderSensorReport(m);
     } else if (m.type === 'plan') { plan = m;
     } else if (m.type === 'step1_done') { hudMeter(null); hudMsg(trial && trial.mode.startsWith('eyesclosed') ? (m.visual_on ? 'Alpha rhythm found' : 'No clear alpha rhythm · stopping') : m.visual_on ? 'Visual pathway confirmed' : 'Visual pathway not confirmed · stopping');
     } else if (m.type === 'summary') { hudMsg('');
@@ -1074,6 +1141,66 @@ Do cars grow on trees? | no</textarea>
   }
   updateGuide();
 
+  // ---------- "Check my sensors" ----------
+  const S_LABEL = { good: 'Working perfectly', fair: 'Usable', bad: 'Too noisy', flat: 'No signal', off: 'Not touching' };
+  const S_ICON = { perfect: '✓', ready: '!', not_ready: '✕', no_data: '✕' };
+  let sensBusy = false;
+  const meterPos = v => Math.max(0, Math.min(100, Math.log10(Math.max(v, 1)) / 4 * 100));  // 1 uV .. 10,000 uV
+  function openSensors() {
+    if (sensBusy || !guide.connected) return;
+    sensBusy = true; $('bSensors').disabled = true;
+    $('sens').classList.add('on'); renderMeasuring(8, 8);
+    send({ type: 'run', mode: 'sensors' });
+  }
+  function closeSensors() { $('sens').classList.remove('on'); }
+  function renderMeasuring(left, total) {
+    const C = 2 * Math.PI * 74, off = C * (left / total);
+    $('sensBody').innerHTML = `<div class="smeas">
+      <svg class="sring" viewBox="0 0 170 170" role="img" aria-label="${left} seconds left">
+        <circle class="trk" cx="85" cy="85" r="74" fill="none" stroke-width="10"/>
+        <circle class="arc" cx="85" cy="85" r="74" fill="none" stroke-width="10" stroke-linecap="round"
+                stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 85 85)"/>
+        <text x="85" y="101" text-anchor="middle">${left}</text></svg>
+      <div><h2>Listening to your sensors…</h2>
+        <ul><li>Sit still, eyes open, looking at the screen</li><li>Relax your jaw, forehead and neck</li><li>Don't touch the headband</li></ul></div>
+    </div>`;
+  }
+  function renderSensorReport(r) {
+    const L = r.limits || {};
+    const tiles = (r.sensors || []).map(s => {
+      const pos = meterPos(s.level_uv);
+      const lines = s.status === 'good'
+        ? `<li class="ok">Clean brain signal. Nothing to fix.</li>`
+        : s.problems.map(p => `<li>${esc(p)}</li>`).join('') + s.fixes.map(f => `<li class="fix">${esc(f)}</li>`).join('');
+      const num = (k, v, lim) => `<span>${k}</span><em class="${v > lim ? 'hi' : ''}">${Math.round(v)} µV</em>`;
+      return `<div class="stile ${s.status}">
+        <h3>${esc(s.label)}<span class="pill ${s.status}">${S_LABEL[s.status] || s.status}</span></h3>
+        <div class="lvl">${s.status === 'off' ? '—' : s.level_uv.toFixed(1)} <small>µV brain-wave band</small></div>
+        <div class="meter" aria-hidden="true"><i class="z1" style="width:${meterPos(L.best)}%"></i><i class="z2" style="width:${meterPos(L.usable) - meterPos(L.best)}%"></i><i class="z3" style="flex:1"></i>
+          ${s.status === 'off' ? '' : `<b style="left:${pos}%"></b>`}</div>
+        <div class="mscale" aria-hidden="true"><span style="left:0">1</span><span style="left:${meterPos(L.best)}%">${L.best}</span><span style="left:${meterPos(L.usable)}%">${L.usable}</span><span style="left:100%">10k</span></div>
+        <ul class="sprob">${lines}</ul>
+        ${s.status === 'off' ? '' : `<div class="snums">${num('Drift', s.drift_uv, L.drift)}${num('Jumps', s.jump_uv, L.jump)}${num('Hum', s.hum_uv, L.hum)}${num('Muscle', s.muscle_uv, L.muscle)}</div>`}
+      </div>`;
+    }).join('');
+    const next = r.verdict === 'perfect' ? 'Next: run the Headset check, then pick a test.'
+      : r.verdict === 'ready' ? 'You can test now, or fix the yellow/red sensors and check again.'
+      : 'Fix the red sensors, wait a few seconds for them to settle, then check again.';
+    $('sensBody').innerHTML = `
+      <div class="verdict ${r.verdict}"><div class="vi" aria-hidden="true">${S_ICON[r.verdict] || '?'}</div>
+        <div><h2>${esc(r.title)}</h2><p>${esc(r.detail)}</p></div></div>
+      ${tiles ? `<div class="stiles">${tiles}</div>` : ''}
+      <div class="sfoot"><p>${esc(next)} Measured over ${r.seconds} s (${r.samples} of ${r.expected} samples). The green zone is a clean signal; the app needs a sensor below ${L.usable || 100} µV to use it.</p>
+        <div style="display:flex;gap:10px"><button class="ghost" id="sensClose">Close</button><button class="go" id="sensAgain">Check again</button></div></div>`;
+    $('sensClose').onclick = closeSensors;
+    $('sensAgain').onclick = openSensors;
+    $('sensAgain').focus();
+  }
+  $('bSensors').onclick = openSensors;
+  $('sensX').onclick = closeSensors;
+  $('sens').addEventListener('click', e => { if (e.target.id === 'sens') closeSensors(); });
+  $('g2').classList.add('link'); $('g2').title = 'Check my sensors'; $('g2').onclick = openSensors;
+
   $('qs').addEventListener('input', updateBar); updateBar();
   $('bAware').onclick = () => openIntro('awareness');
   $('bEC').onclick = () => openIntro('eyesclosed');
@@ -1083,7 +1210,8 @@ Do cars grow on trees? | no</textarea>
   $('bTest').onclick = () => run('test');
   $('bCon').onclick = () => run('contrast');
   $('bFull').onclick = async () => { try { await document.documentElement.requestFullscreen(); } catch (e) {} setTimeout(setupScreen, 800); };
-  addEventListener('keydown', e => { if (e.key === 'Escape' && $('intro').classList.contains('on')) { closeIntro(); return; } if (e.key === 'Escape') { if (state === 'flicker') endTrial(); else if (state === 'prep') state = 'rest'; send({ type: 'stop' }); } });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && $('sens').classList.contains('on')) { closeSensors(); return; }
+    if (e.key === 'Escape' && $('intro').classList.contains('on')) { closeIntro(); return; } if (e.key === 'Escape') { if (state === 'flicker') endTrial(); else if (state === 'prep') state = 'rest'; send({ type: 'stop' }); } });
 
   $('navAbout').onclick = () => view('about');
   $('navDemo').onclick = () => view('home');

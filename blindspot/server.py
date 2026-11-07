@@ -20,7 +20,7 @@ import numpy as np
 from aiohttp import web, WSMsgType
 
 from .analysis import (alpha_metrics, candidate_channels, classify, log_ratio, median_split,
-                       permutation_p, score_segment, split_bar,
+                       permutation_p, score_segment, sensor_report, split_bar,
                        thresholds_from_calibration)
 from .sources import BrainFlowSource, LSLSource, SimSource
 
@@ -474,6 +474,20 @@ class Session:
                                     "snr_left": r["snr"]["left"]} for r in rows],
                          "thresholds": self.app["state"]["thresholds"]})
 
+    async def run_sensor_check(self, seconds: float = 8.0):
+        """"Check my sensors": record `seconds` of fresh EEG (no flicker),
+        then say which sensors work and how to fix the rest."""
+        t0 = time.time()
+        for left in range(int(seconds), 0, -1):
+            await self.send({"type": "sensor_progress", "left": left, "total": int(seconds)})
+            await asyncio.sleep(1.0)
+        await asyncio.sleep(0.6)  # let Bluetooth catch up
+        self.rec.pull()
+        seg = self.rec.window(t0, t0 + seconds)
+        report = sensor_report(seg, self.src.fs, list(self.src.channel_names), seconds,
+                               mains_hz=self.app["mains"])
+        await self.send({"type": "sensor_report", **report})
+
     async def run_check(self):
         """Headset check: both halves flicker, live SNR every second."""
         await self.send({"type": "trial", "i": 0, "n": 1, "mode": "check",
@@ -528,6 +542,9 @@ class Session:
                                  "n_scored": N_SCORED, "bar": split_bar(N_SCORED)})
                 continue
             mode = msg.get("mode", "test")
+            if mode == "sensors":  # not a test: no flicker, no ledger, no file
+                await self.run_sensor_check()
+                continue
             duration = min(15.0, max(6.0, float(msg.get("duration", 10))))
             self.log = []
             self.meta = {}
