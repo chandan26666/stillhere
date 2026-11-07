@@ -1,0 +1,10 @@
+# Core app (always needed)
+numpy
+scipy
+aiohttp
+pylsl
+#
+# For the g.tec Unicorn BCI Core-4 / Core-8 headset, also run:
+#   pip install "gpype[all]"
+# Only for the older Unicorn Hybrid Black headset (Windows/Linux), also run:
+#   pip install "brainflow>=5.12"
