@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>StillHere · Neural awareness</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* Fonts ship with the app (web/fonts), so the page looks right with no internet. */
+  @font-face { font-family: "Chakra Petch"; font-weight: 500; font-display: swap; src: url(/static/fonts/chakra-petch-latin-500-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Chakra Petch"; font-weight: 600; font-display: swap; src: url(/static/fonts/chakra-petch-latin-600-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Chakra Petch"; font-weight: 700; font-display: swap; src: url(/static/fonts/chakra-petch-latin-700-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Manrope"; font-weight: 400; font-display: swap; src: url(/static/fonts/manrope-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Manrope"; font-weight: 500; font-display: swap; src: url(/static/fonts/manrope-latin-500-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Manrope"; font-weight: 600; font-display: swap; src: url(/static/fonts/manrope-latin-600-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Manrope"; font-weight: 700; font-display: swap; src: url(/static/fonts/manrope-latin-700-normal.woff2) format("woff2"); }
+  @font-face { font-family: "JetBrains Mono"; font-weight: 400; font-display: swap; src: url(/static/fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: "JetBrains Mono"; font-weight: 600; font-display: swap; src: url(/static/fonts/jetbrains-mono-latin-600-normal.woff2) format("woff2"); }
+</style>
+<style>
+  /* Neurotech lab: deep-ocean navy, instrument panels, two signal colours that
+     mean the same thing everywhere: cyan = LEFT stimulus, amber = RIGHT.
+     Layout: header strip, three-panel console (head map | live signal | protocol),
+     full-screen results view. */
+  :root {
+    --bg: #060b1a;
+    --bg2: #0a1328;
+    --panel: #0d1730;
+    --line: rgba(130, 160, 255, 0.16);
+    --line-strong: rgba(130, 160, 255, 0.32);
+    --text: #e6ecff;
+    --muted: #8793bd;
+    --left: #5fe1ff;     /* LEFT stimulus, everywhere */
+    --right: #ffb35c;    /* RIGHT stimulus, everywhere */
+    --brand: #7c9cff;
+    --good: #4be38f; --warn: #ffcc4d; --bad: #ff6b6b;
+    --font-display: "Chakra Petch", "Rajdhani", system-ui, sans-serif;
+    --font-body: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); overflow: hidden; }
+  canvas#c { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; background: #808080; }
+
+  #topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: rgba(6,11,26,.86); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  #topbar.hidden { display: none; }
+  .nav { display: flex; gap: 4px; margin-left: 28px; }
+  .nav button { background: none; border: 0; color: var(--muted); font: 600 12px var(--font-display); letter-spacing: .18em; text-transform: uppercase; padding: 8px 14px; border-radius: 4px; cursor: pointer; }
+  .nav button:hover { color: var(--text); }
+  .nav button.on { color: var(--text); background: rgba(124,156,255,.14); box-shadow: inset 0 -2px 0 var(--brand); }
+  .lhs { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+  #panel { position: fixed; inset: 0; top: 66px; overflow: auto;
+    background: radial-gradient(1200px 600px at 75% -10%, rgba(124,156,255,.10), transparent 60%),
+                radial-gradient(900px 500px at 0% 110%, rgba(95,225,255,.06), transparent 60%), var(--bg); }
+  #panel.hidden { display: none; }
+
+  /* About page */
+  #about { position: fixed; inset: 0; top: 66px; overflow: auto; display: none; scroll-behavior: smooth;
+           background: radial-gradient(1100px 620px at 80% 0%, rgba(124,156,255,.13), transparent 60%),
+                       radial-gradient(800px 500px at 0% 40%, rgba(95,225,255,.06), transparent 60%), var(--bg); }
+  #about.on { display: block; }
+  .ab { max-width: 1160px; margin: 0 auto; padding: 0 32px; }
+  .hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 40px; align-items: center; padding: 56px 0 40px; }
+  .kicker { font: 600 12px var(--font-display); letter-spacing: .24em; color: var(--brand); text-transform: uppercase; }
+  .hero h1 { font: 700 54px/1.04 var(--font-display); letter-spacing: .005em; margin: 14px 0 18px; }
+  .hero h1 em { font-style: normal; background: linear-gradient(90deg, var(--left), var(--brand) 55%, var(--right)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lede { font-size: 18px; line-height: 1.6; color: #c3cbec; max-width: 34em; }
+  .cta { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
+  .cta .go { width: auto; margin: 0; padding: 14px 26px; }
+  .cta .ghost { flex: 0 0 auto; padding: 14px 20px; }
+  .side-brain { width: 100%; height: auto; display: block; }
+  .sec { padding: 46px 0; border-top: 1px solid var(--line); }
+  .sec h2 { font: 700 30px var(--font-display); margin: 8px 0 10px; letter-spacing: .01em; }
+  .sec > p.sub2 { color: var(--muted); font-size: 16px; line-height: 1.6; max-width: 46em; margin: 0 0 24px; }
+  .stats3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .stat3 { border: 1px solid var(--line); border-radius: 10px; padding: 22px; background: linear-gradient(180deg, rgba(255,255,255,.03), transparent), var(--panel); }
+  .stat3 .big { font: 700 46px var(--font-display); line-height: 1; }
+  .stat3 p { color: #c3cbec; font-size: 14.5px; line-height: 1.55; margin: 10px 0 8px; }
+  .stat3 a { color: var(--brand); font-size: 12px; }
+  .steps3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .step3 { border: 1px solid var(--line); border-radius: 10px; padding: 22px; background: var(--panel); position: relative; overflow: hidden; }
+  .step3 .num { font: 700 13px var(--font-mono); color: var(--brand); }
+  .step3 h3 { font: 700 19px var(--font-display); margin: 8px 0 8px; }
+  .step3 p { color: #c3cbec; font-size: 14.5px; line-height: 1.55; margin: 0; }
+  .step3 svg { display: block; width: 100%; height: 92px; margin: 4px 0 12px; }
+  .rules { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+  .rules ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+  .rules li { display: grid; grid-template-columns: 26px 1fr; gap: 8px; font-size: 15px; line-height: 1.5; color: #c9d2f2; }
+  .rules li b { color: var(--text); }
+  .rules li i { font: 700 12px var(--font-mono); color: var(--brand); font-style: normal; padding-top: 3px; }
+  .sheet { border: 1px solid var(--line-strong); border-radius: 10px; padding: 20px; background: #0b1430; }
+  .sheet .k { font: 600 11px var(--font-display); letter-spacing: .2em; color: var(--muted); }
+  .pill { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 8px; border: 1px solid var(--line); margin-top: 10px; font-weight: 700; }
+  .pill small { display: block; font-weight: 500; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .pill .d { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
+  table.cmp { width: 100%; border-collapse: collapse; font-size: 15px; }
+  table.cmp th, table.cmp td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.cmp th { font: 600 12px var(--font-display); letter-spacing: .16em; color: var(--muted); text-transform: uppercase; }
+  table.cmp td:first-child { color: var(--muted); width: 18%; }
+  table.cmp td:last-child { color: var(--text); }
+  table.cmp tr td:nth-child(2) { color: #aab3d6; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .note { border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px; background: var(--panel); }
+  .note h3 { font: 700 16px var(--font-display); letter-spacing: .06em; margin: 0 0 10px; }
+  .note ul { margin: 0; padding-left: 18px; color: #c3cbec; line-height: 1.65; font-size: 14.5px; }
+  .note a { color: var(--brand); }
+  .endcta { text-align: center; padding: 56px 0 72px; }
+  .endcta h2 { font: 700 34px var(--font-display); margin: 0 0 18px; }
+  .endcta .go { width: auto; padding: 15px 34px; }
+  .tintL { animation: tint 2.4s ease-in-out infinite; } .tintR { animation: tint 2.4s ease-in-out infinite 1.2s; }
+  @keyframes tint { 0%, 100% { opacity: .05; } 50% { opacity: .45; } }
+  .pulseL { animation: pl 2.4s ease-in-out infinite; } .pulseR { animation: pl 2.4s ease-in-out infinite 1.2s; }
+  @keyframes pl { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+  .flow { stroke-dasharray: 3 7; animation: flow 1.6s linear infinite; }
+  @keyframes flow { to { stroke-dashoffset: -20; } }
+  @media (max-width: 980px) { .hero, .rules, .two, .stats3, .steps3 { grid-template-columns: 1fr !important; } .hero h1 { font-size: 40px; } }
+  @media (prefers-reduced-motion: reduce) { .pulseL, .pulseR, .tintL, .tintR, .flow { animation: none; } }
+
+  header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 16px 28px; border-bottom: 1px solid var(--line); }
+  .logo { display: flex; align-items: center; gap: 12px; font-family: var(--font-display); letter-spacing: .12em; }
+  .logo b { font-size: 20px; font-weight: 700; }
+  .logo span { color: var(--muted); font-size: 13px; }
+  .logo .tri { width: 0; height: 0; border-left: 14px solid transparent; border-bottom: 14px solid var(--brand); }
+  .status { display: flex; gap: 10px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 12px; }
+  .status span { border: 1px solid var(--line); padding: 5px 10px; border-radius: 4px; color: var(--muted); white-space: nowrap; }
+  .status em { color: var(--text); font-style: normal; }
+  .live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--bad); margin-right: 6px; vertical-align: 1px; }
+  .live-dot.on { background: var(--good); box-shadow: 0 0 10px var(--good); animation: pulse 1.6s infinite; }
+  @keyframes pulse { 50% { opacity: .35; } }
+
+  .grid { display: grid; grid-template-columns: 300px minmax(0, 1fr) 340px; gap: 16px; padding: 18px 28px 28px; }
+  .card { background: linear-gradient(180deg, rgba(255,255,255,.025), transparent 40%), var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; position: relative; }
+  .card h2 { margin: 0 0 12px; font: 600 12px var(--font-display); letter-spacing: .18em; color: var(--muted); text-transform: uppercase; display: flex; justify-content: space-between; }
+  .card h2 small { font: 11px var(--font-mono); letter-spacing: 0; text-transform: none; }
+
+  /* Head map */
+  #headmap { width: 100%; height: auto; display: block; }
+  .legend { display: grid; gap: 6px; margin-top: 8px; font: 12px var(--font-mono); }
+  .legend div { display: flex; justify-content: space-between; color: var(--muted); }
+  .legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+
+  /* Signal */
+  canvas#trace { display: block; width: 100%; height: 280px; }
+  .spec { margin-top: 14px; }
+  canvas#spec { display: block; width: 100%; height: 110px; }
+  .freqtags { display: flex; gap: 16px; font: 12px var(--font-mono); margin-top: 6px; color: var(--muted); flex-wrap: wrap; }
+  .freqtags b.l { color: var(--left); } .freqtags b.r { color: var(--right); }
+
+  /* Protocol */
+  .field { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .field label { font-size: 13px; color: var(--muted); }
+  .field input { width: 100%; min-width: 0; }
+  .field input, .proto input { font: 500 14px var(--font-body); color: var(--text); background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 4px; padding: 7px 9px; }
+  .field input:focus, .proto input:focus { outline: none; border-color: var(--brand); }
+  .proto { list-style: none; margin: 14px 0 0; padding: 0; counter-reset: s; }
+  .proto li { display: grid; grid-template-columns: 34px 1fr; gap: 6px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .proto .n { font: 600 13px var(--font-display); color: var(--brand); letter-spacing: .08em; }
+  .proto .t { font-weight: 700; font-size: 14px; }
+  .proto .d { font-size: 12.5px; color: var(--muted); line-height: 1.45; margin-top: 2px; }
+  .proto input { width: 52px; padding: 3px 6px; font: 600 12px var(--font-mono); margin: 0 4px; }
+  .qs { width: 100%; min-height: 128px; margin-top: 6px; font: 12.5px/1.5 var(--font-mono); color: var(--text); background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; resize: vertical; }
+  .qs:focus { outline: none; border-color: var(--brand); }
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .modes .go { margin-top: 0; padding: 13px 8px; font-size: 13px; }
+  .go.ec { background: linear-gradient(180deg, #6b4fc4, #523aa0); border-color: #9a82ff; box-shadow: 0 8px 30px rgba(130,100,240,.25); }
+  .go.alt { background: linear-gradient(180deg, #1f6f86, #155566); border-color: #2fa6c4; box-shadow: 0 8px 30px rgba(47,166,196,.25); }
+  .yn { position: absolute; top: 64px; font: 700 34px var(--font-display); letter-spacing: .14em; padding: 6px 18px; border-radius: 6px; background: rgba(6,11,26,.85); display: none; }
+  .yn.y { left: 25%; transform: translateX(-50%); color: var(--left); border: 1px solid var(--left); }
+  .yn.n { left: 75%; transform: translateX(-50%); color: var(--right); border: 1px solid var(--right); }
+  .go { width: 100%; margin-top: 12px; padding: 15px; border-radius: 6px; border: 1px solid var(--brand); cursor: pointer;
+        font: 700 15px var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: #fff;
+        background: linear-gradient(180deg, #5878f0, #3c57c9); box-shadow: 0 0 0 1px rgba(124,156,255,.2), 0 8px 30px rgba(92,120,240,.35); }
+  .go:hover:not(:disabled) { filter: brightness(1.08); }
+  .sub { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .ghost { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid var(--line-strong); background: transparent; color: var(--text); font: 600 13px var(--font-body); cursor: pointer; }
+  .ghost:hover:not(:disabled) { background: rgba(255,255,255,.05); }
+  details.more { margin-top: 12px; font-size: 13px; color: var(--muted); }
+  details.more summary { cursor: pointer; }
+  details.more .sub { margin-top: 8px; }
+  button:disabled { opacity: .35; cursor: default; }
+  :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .caution { margin-top: 14px; font-size: 12px; color: var(--warn); line-height: 1.45; border-left: 2px solid var(--warn); padding-left: 10px; }
+  .barinfo { font: 600 12px var(--font-mono); color: var(--text); }
+  .sitting { margin-top: 10px; font: 11.5px var(--font-mono); color: var(--muted); line-height: 1.5; }
+  .verdict.info { color: var(--brand); } .verdict.muted { color: var(--text); }
+  .abort { max-width: 720px; margin: 12vh auto 0; text-align: center; }
+  .abort .verdict { font-size: 30px; }
+  .abort .res-actions { justify-content: center; }
+  .planline { font: 600 12px var(--font-mono); color: var(--muted); letter-spacing: .04em; margin-top: 6px; }
+  .pnote { font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 4px; }
+
+  .why { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .stat .big { font: 700 40px var(--font-display); letter-spacing: .02em; }
+  .stat p { margin: 4px 0 0; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+  .stat a { color: var(--brand); font-size: 12px; }
+
+  /* Results view */
+  #results { position: fixed; inset: 0; overflow: auto; display: none; background: radial-gradient(900px 500px at 50% 0%, rgba(124,156,255,.12), transparent 60%), var(--bg); }
+  #results.on { display: block; }
+  .res { max-width: 1040px; margin: 0 auto; padding: 32px 28px 48px; }
+  .res-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .res-top .k { font: 600 12px var(--font-display); letter-spacing: .2em; color: var(--muted); }
+  .res-main { display: grid; grid-template-columns: 340px 1fr; gap: 24px; margin-top: 20px; align-items: start; }
+  .ring { position: relative; width: 300px; height: 300px; margin: 0 auto; }
+  .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring .c { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+  .ring .c b { font: 700 64px var(--font-display); line-height: 1; }
+  .ring .c span { color: var(--muted); font-size: 14px; margin-top: 6px; }
+  .verdict { font: 700 26px var(--font-display); letter-spacing: .02em; margin: 0 0 6px; }
+  .verdict.good { color: var(--good); } .verdict.warn { color: var(--warn); } .verdict.bad { color: var(--bad); }
+  .kv { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+  .kv > div { border: 1px solid var(--line); border-radius: 6px; padding: 12px; }
+  .kv .k { font: 600 11px var(--font-display); letter-spacing: .16em; color: var(--muted); text-transform: uppercase; }
+  .kv .v { font: 600 20px var(--font-mono); margin-top: 4px; }
+  .seq { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .seq div { width: 46px; border-radius: 6px; padding: 7px 0 5px; text-align: center; font: 600 13px var(--font-mono); border: 1px solid var(--line); }
+  .seq div.L { border-color: rgba(95,225,255,.55); color: var(--left); }
+  .seq div.R { border-color: rgba(255,179,92,.55); color: var(--right); }
+  .seq div.miss { opacity: .45; border-style: dashed; }
+  .seq small { display: block; font-size: 11px; color: var(--muted); }
+  .interp { line-height: 1.6; color: #c9d2f2; margin: 16px 0 6px; }
+  .fine { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .res-actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  .res-actions .go { width: auto; padding: 12px 22px; margin: 0; }
+  .res-actions .ghost { flex: 0 0 auto; padding: 12px 18px; }
+  table.dat { width: 100%; border-collapse: collapse; font: 12px var(--font-mono); margin-top: 8px; }
+  table.dat th, table.dat td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+  table.dat th { color: var(--muted); font-weight: 400; }
+
+  /* Run HUD */
+  #hud { position: fixed; inset: 0; pointer-events: none; display: none; }
+  #hud.on { display: block; }
+  .hbar { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 16px; padding: 10px 18px; background: rgba(6,11,26,.92); border-bottom: 1px solid var(--line-strong); font: 600 13px var(--font-display); letter-spacing: .14em; color: var(--text); }
+  .segs { display: flex; gap: 3px; flex: 1; }
+  .segs i { flex: 1; height: 6px; background: rgba(255,255,255,.12); border-radius: 1px; }
+  .segs i.done { background: var(--brand); box-shadow: 0 0 8px rgba(124,156,255,.6); }
+  .segs i.now { background: rgba(124,156,255,.55); }
+  .hcmd { position: absolute; top: 46%; left: 50%; transform: translate(-50%, -50%); background: rgba(6,11,26,.94); border: 1px solid var(--line-strong); border-radius: 8px; padding: 20px 34px; text-align: center; display: none; }
+  .hcmd b { font: 700 34px var(--font-display); letter-spacing: .06em; }
+  .hcmd b.L { color: var(--left); } .hcmd b.R { color: var(--right); }
+  .hcmd small { display: block; margin-top: 6px; color: var(--muted); font-size: 14px; }
+  .hmeter { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); width: min(560px, 92vw); background: rgba(6,11,26,.94); border: 1px solid var(--line-strong); border-radius: 8px; padding: 10px 14px; display: none; }
+  .hmeter .t { display: flex; justify-content: space-between; font: 600 11px var(--font-display); letter-spacing: .16em; color: var(--muted); }
+  .lr { display: grid; grid-template-columns: 1fr 1fr; height: 12px; margin-top: 8px; }
+  .lr .l { display: flex; justify-content: flex-end; border-right: 2px solid var(--text); }
+  .lr i { display: block; height: 100%; width: 0; transition: width .5s; }
+  .lr .l i { background: var(--left); box-shadow: 0 0 10px var(--left); border-radius: 2px 0 0 2px; }
+  .lr .r i { background: var(--right); box-shadow: 0 0 10px var(--right); border-radius: 0 2px 2px 0; }
+  .hmeter .v { display: flex; justify-content: space-between; font: 12px var(--font-mono); margin-top: 5px; }
+  .hmeter .v .a { color: var(--left); } .hmeter .v .b { color: var(--right); }
+  .hmsg { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); background: rgba(6,11,26,.94); border: 1px solid var(--line-strong); border-radius: 8px; padding: 10px 16px; font-size: 14px; display: none; white-space: pre-line; text-align: center; }
+
+  /* Printable report (white, hidden on screen) */
+  #print { display: none; }
+  @media print {
+    body { overflow: visible; background: #fff; color: #111; }
+    #c, #hud, #panel, #results { display: none !important; }
+    #print { display: block; font-family: Arial, sans-serif; color: #111; padding: 10px; }
+    #print h1 { font-size: 18px; border-bottom: 2px solid #111; padding-bottom: 6px; }
+    #print table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    #print th, #print td { text-align: left; padding: 6px 4px; border-bottom: 1px solid #bbb; }
+    #print .sig { display: flex; gap: 40px; margin-top: 40px; font-size: 12px; }
+    #print .sig div { flex: 1; border-top: 1px solid #111; padding-top: 4px; }
+  }
+
+  @media (max-width: 1150px) { .grid { grid-template-columns: 1fr 1fr; } .grid .sig-card { grid-column: 1 / -1; order: -1; } }
+  @media (max-width: 760px) { .grid, .why, .res-main, .kv { grid-template-columns: 1fr; } }
+
+  /* first-timer guide strip */
+  .guide { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 18px 28px 0; }
+  .gstep { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--panel); }
+  .gstep i { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 700 14px var(--font-display); font-style: normal; border: 1.5px solid var(--line-strong); color: var(--muted); }
+  .gstep b { display: block; font: 700 14px var(--font-body); }
+  .gstep span { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+  .gstep.done i { background: var(--good); border-color: var(--good); color: #06210f; }
+  .gstep.warn i { background: var(--warn); border-color: var(--warn); color: #2a1f00; }
+  .gstep.now { border-color: rgba(124,156,255,.6); box-shadow: 0 0 0 1px rgba(124,156,255,.25); }
+  .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; margin: -4px 0 10px; }
+  .blk { border-top: 1px solid var(--line); padding: 12px 0 10px; }
+  .blk:first-of-type { border-top: 0; padding-top: 0; }
+  .bh { font: 600 11px var(--font-display); letter-spacing: .16em; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+  .bh span { text-transform: none; letter-spacing: 0; font: 11.5px var(--font-body); }
+  .hint { font-size: 12px; color: var(--muted); line-height: 1.45; margin: -2px 0 10px; }
+  .tbtn { display: block; width: 100%; text-align: left; margin: 0 0 8px; padding: 11px 14px; border-radius: 8px; cursor: pointer; color: var(--text);
+          border: 1px solid var(--line-strong); background: rgba(255,255,255,.03); font: 12.5px var(--font-body); line-height: 1.4; }
+  .tbtn b { display: block; font: 700 15px var(--font-display); letter-spacing: .04em; margin-bottom: 2px; }
+  .tbtn span { color: var(--muted); }
+  .tbtn:hover:not(:disabled) { background: rgba(124,156,255,.08); }
+  .tbtn.chk { border-left: 4px solid var(--good); } .tbtn.cmd { border-left: 4px solid var(--brand); }
+  .tbtn.ynt { border-left: 4px solid #2fa6c4; } .tbtn.ec { border-left: 4px solid #9a82ff; }
+  /* instructions before a test */
+  #intro { position: fixed; inset: 0; z-index: 20; display: none; overflow: auto; background: rgba(4,8,20,.92); backdrop-filter: blur(6px); }
+  #intro.on { display: block; }
+  .ibox { max-width: 1100px; margin: 5vh auto; background: var(--panel); border: 1px solid var(--line-strong); border-radius: 14px; padding: 30px 34px; }
+  .itop { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+  .itop h2 { font: 700 34px var(--font-display); margin: 6px 0 4px; }
+  .itime { color: var(--muted); font-size: 14px; }
+  .icols { display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; margin-top: 22px; }
+  .ih { font: 600 12px var(--font-display); letter-spacing: .16em; color: var(--brand); text-transform: uppercase; margin-bottom: 12px; }
+  #iSubject { margin: 0; padding-left: 22px; display: grid; gap: 10px; font-size: 17px; line-height: 1.5; color: var(--text); }
+  #iSubject li::marker { color: var(--brand); font-weight: 700; }
+  .ichk { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .ichk label { display: grid; grid-template-columns: 22px 1fr; gap: 8px; font-size: 14.5px; line-height: 1.45; color: #c9d2f2; cursor: pointer; }
+  .ichk input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--brand); }
+  .ichk .must { color: var(--warn); }
+  .iwatch { margin-top: 16px; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-size: 13.5px; line-height: 1.5; color: #c9d2f2; background: #0b1430; }
+  .iwatch b { color: var(--text); }
+  .ifoot { display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 24px; border-top: 1px solid var(--line); padding-top: 18px; }
+  .ifoot .go { width: auto; margin: 0; padding: 14px 30px; }
+  .iwarn { color: var(--warn); font-size: 13.5px; }
+  @media (max-width: 980px) { .guide { grid-template-columns: 1fr 1fr; } .icols { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { .live-dot.on { animation: none; } .lr i { transition: none; } }
+  .brainkey { display: flex; justify-content: space-between; gap: 8px; font: 11.5px var(--font-mono); color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
+  .brainkey b.l { color: var(--left); font-weight: 600; } .brainkey b.r { color: var(--right); font-weight: 600; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud" aria-live="polite">
+  <div class="hbar"><span id="hStep">STEP 01 // VISUAL RESPONSE</span><div class="segs" id="hSegs"></div><span id="hCount"></span></div>
+  <div class="hcmd" id="hCmd"></div>
+  <div class="yn y" id="ynY">◀ YES</div><div class="yn n" id="ynN">NO ▶</div>
+  <div class="hmeter" id="hMeter">
+    <div class="t"><span>Left stimulus</span><span>Visual response · live</span><span>Right stimulus</span></div>
+    <div class="lr"><div class="l"><i id="mL"></i></div><div class="r"><i id="mR"></i></div></div>
+    <div class="v"><span class="a" id="vL">L 0.00</span><span class="b" id="vR">R 0.00</span></div>
+  </div>
+  <div class="hmsg" id="hMsg"></div>
+</div>
+
+<div id="topbar">
+  <header class="top">
+    <div class="lhs"><div class="logo"><i class="tri"></i><b>STILLHERE</b><span>/ NEURAL AWARENESS</span></div>
+      <nav class="nav"><button id="navAbout" class="on">1 · About</button><button id="navDemo">2 · Live demo</button></nav></div>
+    <div class="status">
+      <span><i class="live-dot" id="liveDot"></i><em id="srcName">Not connected</em></span>
+      <span>EEG <em id="chInfo">-</em></span>
+      <span>Display <em id="hzInfo">-</em></span>
+    </div>
+  </header>
+</div>
+
+<div id="about"><div class="ab">
+  <section class="hero">
+    <div>
+      <div class="kicker">USF BCI Build Sprint 2026 · Biotech track</div>
+      <h1>Some patients who seem unresponsive <em>might still be aware.</em></h1>
+      <p class="lede">The usual bedside checks ask a patient to move. We wanted to see if a laptop screen and a 4-sensor EEG headset could check whether someone follows a simple instruction without moving at all. If the signal isn't good enough, it doesn't give a score.</p>
+      <div class="cta"><button class="go" data-go="home">Open the live demo</button><button class="ghost" data-jump="how">How it works</button></div>
+    </div>
+    <svg id="sideBrain" class="side-brain" viewBox="0 0 540 340" role="img" aria-label="Side view of a head: light from the screen enters the eye and travels to the visual cortex at the back of the brain, where the sensors sit"></svg>
+  </section>
+
+  <section class="sec">
+    <div class="kicker">The problem</div>
+    <h2>Aware inside, unable to show it.</h2>
+    <p class="sub2">After a stroke, a brain injury or a cardiac arrest, some patients have their eyes open but don't respond to anything. Bedside tests need some kind of movement, so if someone is aware but can't move, they look the same as someone who isn't.</p>
+    <div class="stats3">
+      <div class="stat3"><div class="big" style="color:var(--left)">1 in 4</div><p>patients who showed no response to commands could still do imagined-movement tasks on fMRI or EEG (241 patients).</p><a href="https://newatlas.com/medical/hidden-consciousness-brain-unresponsive-patients" target="_blank" rel="noopener">NEJM 2024</a></div>
+      <div class="stat3"><div class="big" style="color:var(--brand)">44% vs 14%</div><p>ICU patients with hidden brain responses were living independently a year later, vs. 14% of those without (104 patients).</p><a href="https://www.irishtimes.com/life-and-style/health-family/scientists-find-hidden-brain-function-in-unresponsive-patients-after-brain-injury-1.3940503" target="_blank" rel="noopener">NEJM 2019</a></div>
+      <div class="stat3"><div class="big" style="color:var(--right)">~40%</div><p>of patients diagnosed as vegetative were actually minimally conscious when examined more carefully.</p><a href="https://mcgill.ca/x/oJ2" target="_blank" rel="noopener">Brain Sciences 2020</a></div>
+    </div>
+  </section>
+
+  <section class="sec" id="how">
+    <div class="kicker">How it works</div>
+    <h2>How a test runs</h2>
+    <p class="sub2">When you look at something flickering, the visual part of your brain (at the back of the head) picks up the same rhythm. If you pay attention to one side, that side's rhythm gets a bit stronger, even if your eyes don't move. That's what we measure.</p>
+    <div class="steps3">
+      <div class="step3"><span class="num">01</span>
+        <svg viewBox="0 0 300 92"><rect x="40" y="10" width="220" height="70" rx="6" fill="#0a1328" stroke="rgba(130,160,255,.3)"/><rect class="pulseL" x="48" y="18" width="98" height="54" rx="3" fill="#5fe1ff" opacity=".6"/><rect class="pulseR" x="154" y="18" width="98" height="54" rx="3" fill="#ffb35c" opacity=".6"/><circle cx="150" cy="45" r="5" fill="#e00000"/></svg>
+        <h3>1. Check the signal</h3><p>Both halves flicker (8.57 Hz and 12 Hz). We need to see both of them in the EEG. If we can't, the test stops there and no score is shown.</p></div>
+      <div class="step3"><span class="num">02</span>
+        <svg viewBox="0 0 300 92"><rect x="40" y="10" width="220" height="70" rx="6" fill="#0a1328" stroke="rgba(130,160,255,.3)"/><rect x="48" y="18" width="98" height="54" rx="3" fill="#5fe1ff" opacity=".85"/><rect x="154" y="18" width="98" height="54" rx="3" fill="#ffb35c" opacity=".2"/><circle cx="150" cy="45" r="5" fill="#e00000"/><text x="97" y="50" text-anchor="middle" font-family="Chakra Petch, sans-serif" font-size="14" font-weight="700" fill="#060b1a">◀ FOCUS</text></svg>
+        <h3>2. Give commands</h3><p>A voice says "focus on the left side" or "right side", 12 times in random order (6 each). Eyes stay on the dot. The EEG is used to guess which side they focused on.</p></div>
+      <div class="step3"><span class="num">03</span>
+        <svg viewBox="0 0 300 92"><rect x="70" y="6" width="160" height="80" rx="6" fill="#f4f6ff"/><rect x="84" y="18" width="90" height="7" rx="2" fill="#1b2340"/><rect x="84" y="32" width="132" height="4" rx="2" fill="#9aa3c7"/><rect x="84" y="42" width="120" height="4" rx="2" fill="#9aa3c7"/><rect x="84" y="56" width="104" height="14" rx="3" fill="#7c9cff"/><text x="136" y="66.5" text-anchor="middle" font-family="Manrope, sans-serif" font-size="9" font-weight="700" fill="#fff">Pass 1 of 2</text></svg>
+        <h3>3. Score it</h3><p>They need 10 out of 12 to pass. One pass just means "test again later". It only suggests a referral after two passes in a row, at least 12 hours apart.</p></div>
+    </div>
+  
+    <div class="step3" style="margin-top:16px;display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center;">
+      <svg viewBox="0 0 80 40" width="80" height="40" style="height:40px;margin:0"><path d="M6 20 C22 34 58 34 74 20" fill="none" stroke="#b9a3c9" stroke-width="5" stroke-linecap="round"/><path d="M20 28 l-4 7 M34 31 l-2 8 M48 31 l2 8 M62 28 l4 7" stroke="#b9a3c9" stroke-width="3.5" stroke-linecap="round"/></svg>
+      <div><h3 style="margin-top:0">Eyes closed? There's a second test.</h3><p>With eyes closed, the back of the brain shows strong alpha waves, and doing mental math usually makes them drop. So the voice says "count backwards from 600 by sevens" or "just relax", 12 times in random order, and we check whether the alpha follows. Same rules and pass mark. In some people alpha goes up during math instead, so they'd get "No conclusion".</p></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="kicker">Rules</div>
+    <h2>Rules we added so one lucky run doesn't mean much</h2>
+    <div class="rules">
+      <ul>
+        <li><i>01</i><span><b>No signal, no score.</b> If we can't see the flicker on both sides, or fewer than 2 sensors have good contact, it just says "Not interpretable."</span></li>
+        <li><i>02</i><span><b>Decided before the test.</b> 12 trials, pass at 10, and which sensors we use are all set before it starts. Passing by pure luck is about a 4% chance.</span></li>
+        <li><i>03</i><span><b>No retrying until it works.</b> The server allows one scored run per patient every 12 hours. Stopping halfway still counts as a run.</span></li>
+        <li><i>04</i><span><b>All runs show up on the report,</b> including failed and stopped ones.</span></li>
+        <li><i>05</i><span><b>It never says "conscious" or "unconscious".</b> A failed test doesn't mean nobody is there.</span></li>
+      </ul>
+      <div class="sheet"><div class="k">POSSIBLE RESULTS</div>
+        <div class="pill"><i class="d" style="background:var(--brand)"></i><span>Pass 1 of 2: repeat later.<small>Passed once. Needs another run.</small></span></div>
+        <div class="pill"><i class="d" style="background:var(--good)"></i><span>Refer for full assessment.<small>Passed twice in a row.</small></span></div>
+        <div class="pill"><i class="d" style="background:var(--muted)"></i><span>No conclusion.<small>Didn't pass. Doesn't rule anything out.</small></span></div>
+        <div class="pill"><i class="d" style="background:var(--bad)"></i><span>Not interpretable.<small>Signal not good enough. No score shown.</small></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="kicker">FAQ</div>
+    <h2>Isn't this just an SSVEP speller?</h2>
+    <p class="sub2">It uses the same kind of brain signal, but it's used for something different.</p>
+    <table class="cmp">
+      <tr><th></th><th>SSVEP speller</th><th>StillHere</th></tr>
+      <tr><td>Targets</td><td>Many letters, often 30 to 40</td><td>Two halves of the screen</td></tr>
+      <tr><td>Eyes</td><td>Look straight at the letter</td><td>Stay on the center dot</td></tr>
+      <tr><td>User</td><td>Someone we know is aware</td><td>Someone we're not sure about</td></tr>
+      <tr><td>Answers</td><td>Unknown: whatever they want to say</td><td>Known in advance, so they can be scored</td></tr>
+      <tr><td>Output</td><td>Words</td><td>A result like "Pass 1 of 2" (no words or messages)</td></tr>
+    </table>
+  </section>
+
+  <section class="sec">
+    <div class="two">
+      <div class="note"><h3>What this is based on</h3><ul>
+        <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC39354" target="_blank" rel="noopener">Morgan, Hansen &amp; Hillyard 1996</a>: showed that paying attention to one side makes its flicker response stronger. They also used 8.6 and 12 Hz.</li>
+        <li><a href="https://research.birmingham.ac.uk/en/publications/an-independent-ssvep-based-brain-computer-interface-in-locked-in-/" target="_blank" rel="noopener">Lesenfants 2014</a>: covert-attention SSVEP in locked-in syndrome.</li>
+        <li><a href="https://orbi.uliege.be/handle/2268/185857" target="_blank" rel="noopener">Pan 2014</a>: visual awareness test in disorders of consciousness.</li>
+        <li><a href="https://www.gtec.at/product/mindbeagle-brain-assessment-and-communication/" target="_blank" rel="noopener">g.tec mindBEAGLE</a>: the clinical system, using hearing, touch and imagined movement.</li></ul></div>
+      <div class="note"><h3>Limitations</h3><ul>
+        <li>It's a hackathon prototype on a non-medical headset (Unicorn BCI Core-4).</li>
+        <li>We only tested it on ourselves. Using it with patients would need a proper approved study.</li>
+        <li>Needs open eyes, a working visual pathway and language.</li>
+        <li>Attention-only accuracy is around 70 to 75% even in healthy people, so a lot of real responders would still get "No conclusion".</li>
+        <li>Flicker is not risk-free for photosensitive people.</li></ul></div>
+    </div>
+  </section>
+
+  <section class="sec" id="use">
+    <div class="kicker">Using this app</div>
+    <h2>How to run it, in 4 steps</h2>
+    <div class="steps3" style="grid-template-columns:repeat(4,1fr)">
+      <div class="step3"><span class="num">1</span><h3>Put the headset on</h3><p>Sensors on the back of the head, hair parted under each one. The README explains how to connect it.</p></div>
+      <div class="step3"><span class="num">2</span><h3>Open the live demo</h3><p>Click <b>Live demo</b> at the top. A checklist across the top shows what's done and what's next.</p></div>
+      <div class="step3"><span class="num">3</span><h3>Run the headset check</h3><p>The person looks left, then right. If the bars swap, the headset is picking up the signal.</p></div>
+      <div class="step3"><span class="num">4</span><h3>Pick a test</h3><p>Each test shows instructions to read out loud and a short checklist before it starts. Results come at the end.</p></div>
+    </div>
+  </section>
+
+  <section class="endcta"><h2>Try the demo</h2><button class="go" data-go="home">Open the live demo</button></section>
+</div></div>
+
+<div id="panel" class="hidden">
+
+  <div class="guide">
+    <div class="gstep" id="g1"><i>1</i><div><b>Connect the headset</b><span id="gs1">Waiting for the app to connect...</span></div></div>
+    <div class="gstep" id="g2"><i>2</i><div><b>Check the sensors</b><span id="gs2">Dots on the brain should be green.</span></div></div>
+    <div class="gstep" id="g3"><i>3</i><div><b>Run the headset check</b><span id="gs3">Look left, then right. The bars should swap.</span></div></div>
+    <div class="gstep" id="g4"><i>4</i><div><b>Run a test</b><span id="gs4">Pick one on the right. Instructions come first.</span></div></div>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Brain view <small id="mapNote">top view, nose up</small></h2>
+      <p class="what">The dots are the sensors. <b style="color:var(--good)">Green</b> = touching the head, <b style="color:var(--warn)">yellow</b> = flat (not touching), <b style="color:var(--bad)">red</b> = noisy (loose or moving). When the screen flickers, the back of the brain glows.</p>
+      <svg id="headmap" viewBox="0 0 200 222" role="img" aria-label="Top view of the brain showing sensor positions, contact quality and visual cortex response"><g id="hmStatic"></g><g id="hmDyn"></g></svg>
+      <div class="brainkey"><span><b class="l">Left screen</b> → right visual cortex</span><span><b class="r">Right screen</b> → left</span></div>
+      <div class="legend">
+        <div><span><i style="background:var(--good)"></i>good</span><span><i style="background:var(--warn)"></i>flat</span><span><i style="background:var(--bad)"></i>noisy</span></div>
+      </div>
+    </section>
+
+    <section class="card sig-card">
+      <h2>Live brain waves <small id="sigNote">last 4 seconds</small></h2>
+      <p class="what">One line per sensor. Wavy is good. A flat line means that sensor isn't touching. Big jumps usually mean blinking, jaw clenching or moving.</p>
+      <canvas id="trace"></canvas>
+      <div class="spec">
+        <h2>Which speeds are in the signal <small>spectrum</small></h2>
+        <p class="what">When the screen flickers, the <b class="l" style="color:var(--left)">cyan</b> bar (left side) and <b style="color:var(--right)">amber</b> bar (right side) should stick up. With eyes closed you'll see a hump around 10 Hz (alpha).</p>
+        <canvas id="spec"></canvas>
+        <div class="freqtags"><span><b class="l">▮</b> Left side flicker <b class="l" id="fL">8.57 Hz</b></span><span><b class="r">▮</b> Right side flicker <b class="r" id="fR">12.00 Hz</b></span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Run a test</h2>
+      <div class="blk">
+        <div class="bh">Who is being tested</div>
+        <div class="field"><label for="pid">Patient ID</label><input id="pid" value="DEMO-01" autocomplete="off"></div>
+        <p class="hint">Use a new ID for each person. Each ID gets one scored test every 12 hours.</p>
+        <div class="field"><label for="exam">Examiner</label><input id="exam" placeholder="Your name" autocomplete="off"></div>
+        <div class="field"><label for="dur">Seconds per turn</label><input type="number" id="dur" value="10" min="6" max="15"></div>
+        <p class="hint">8 to 10 is good. Fewer seconds is faster but the signal is weaker.</p>
+      </div>
+      <div class="blk">
+        <div class="bh">Pick a test <span>(you'll see instructions before it starts)</span></div>
+        <button class="tbtn chk" id="bCheck"><b>Headset check</b><span>1 min · not scored · look left, then right, and check the bars swap. Do this first.</span></button>
+        <button class="tbtn cmd" id="bAware"><b>Command test</b><span>about 4 min · scored · "focus on the left side", with eyes still on the dot</span></button>
+        <button class="tbtn ynt" id="bYN"><b>Yes / No test</b><span>about 4 min · scored · answer easy questions: focus left for yes, right for no</span></button>
+        <details class="more" style="margin:2px 0 8px"><summary>Edit the yes/no questions</summary>
+          <p class="hint" style="margin-top:6px">One per line: question | yes or no. Needs at least 6 of each. <span class="barinfo" id="barInfo"></span></p>
+          <textarea class="qs" id="qs" spellcheck="false">Is the sky blue? | yes
+Are we in Paris right now? | no
+Do fish live in water? | yes
+Is fire cold? | no
+Is grass green? | yes
+Is one bigger than ten? | no
+Is two plus two four? | yes
+Can a dog fly? | no
+Do birds have feathers? | yes
+Is ice hot? | no
+Is the sun bright? | yes
+Do cars grow on trees? | no</textarea>
+        </details>
+        <button class="tbtn ec" id="bEC"><b>Eyes-closed test</b><span>about 4 min · scored · no screen: mental math vs relax, eyes closed the whole time</span></button>
+      </div>
+      <div class="blk">
+        <div class="bh">How scoring works</div>
+        <p class="hint" style="margin:0">12 turns. Pass at 10 or more (guessing gets about 6). One pass means "test again later". Two passes in a row means "refer". Bad signal means no score at all.</p>
+      </div>
+      <p class="sitting" id="sitInfo"></p>
+      <div class="sub" style="margin-top:4px"><button class="ghost" id="bFull">Full screen</button></div>
+      <details class="more"><summary>Advanced: old visual-field experiments (not part of StillHere)</summary>
+        <div class="sub"><button class="ghost" id="bCal">Calibrate</button><button class="ghost" id="bTest">Blinded L/R</button><button class="ghost" id="bCon">Contrast</button></div>
+      </details>
+      <p class="caution">The flicker tests flash at 8.57 Hz and 12 Hz. Flicker from 3 to 60 Hz can trigger seizures in people with photosensitive epilepsy; 15 to 20 Hz is the most provocative. It is not risk-free. Do not start if you have photosensitive epilepsy or if flickering light has made you unwell. Stop if you feel discomfort.</p>
+    </section>
+
+  </div>
+</div>
+
+<div id="intro"><div class="ibox">
+  <div class="itop"><div><div class="kicker" id="iKick">Before you start</div><h2 id="iTitle">Command test</h2><div class="itime" id="iTime"></div></div>
+    <button class="ghost" id="iCancel" style="flex:0 0 auto">Cancel</button></div>
+  <div class="icols">
+    <div class="icol"><div class="ih">Read this to the person wearing the headset</div><ol id="iSubject"></ol>
+      <button class="ghost" id="iRead" style="flex:0 0 auto;margin-top:6px">Read it out loud for me</button></div>
+    <div class="icol"><div class="ih">Your checklist</div><ul id="iOperator" class="ichk"></ul>
+      <div id="iWatch" class="iwatch"></div></div>
+  </div>
+  <div class="ifoot"><span id="iWarn" class="iwarn"></span><button class="go" id="iStart">Start test</button></div>
+</div></div>
+
+<div id="results"><div class="res" id="resBody"></div></div>
+<div id="print"></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const cv = $('c'), ctx = cv.getContext('2d');
+  const panel = $('panel'), hud = $('hud'), results = $('results');
+  const btns = ['bAware', 'bYN', 'bEC', 'bCheck', 'bCal', 'bTest', 'bCon'].map($);
+  let ws, refresh = 60, k = { left: 7, right: 5 }, freqs = { left: 60 / 7, right: 12 };
+  let state = 'idle', trial = null, frame = 0, framesTotal = 0, fixFlashUntil = 0, nextFlash = 0;
+  let lastTrace = null;
+  const tiles = {};
+  // Session id, shown on the report. The run rules (gap, history) are enforced by the server.
+  const sitting = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+  const sitStart = new Date();
+  let plan = null;
+  const OUTCOME = { pass1: ['info', 'Pass 1 of 2: repeat later.'], refer: ['good', 'Refer for full assessment.'], no_conclusion: ['muted', 'No conclusion.'] };
+  const ABORT = 'Not interpretable: visual pathway not confirmed.';
+  const PNOTE = 'p is from an exact permutation test (6 left, 6 right, random order). Number of trials was set before the test. Screening only, not a diagnosis.';
+  let minGap = 12;
+  const OUT_SHORT = { pass1: 'Pass 1 of 2', refer: 'Refer', no_conclusion: 'No conclusion', not_interpretable: 'Not interpretable', stopped: 'Stopped mid-run (counts)' };
+  function histRows(h) { return (h || []).map((r, i) => `<tr><td>${i + 1}</td><td>${new Date(r.time * 1000).toLocaleString()}</td><td>${r.mode === 'answers' ? 'Yes/No' : r.mode === 'eyesclosed' ? 'Eyes-closed' : 'Command'}</td><td>${r.correct != null ? `${r.correct}/${r.n}` : '-'}</td><td>${OUT_SHORT[r.outcome] || r.outcome}</td></tr>`).join(''); }
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  function resize() { cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio; if (lastTrace) drawAll(lastTrace); }
+  addEventListener('resize', resize); resize();
+
+  // ---------- Display refresh ----------
+  function waitVisible() { return new Promise(res => { if (document.visibilityState === 'visible') return res();
+    const h = () => { if (document.visibilityState === 'visible') { document.removeEventListener('visibilitychange', h); res(); } }; document.addEventListener('visibilitychange', h); }); }
+  function measureOnce() { return new Promise(res => { const d = []; let last = 0;
+    function step(t) { if (last) d.push(t - last); last = t; if (d.length < 90) requestAnimationFrame(step); else { d.sort((a, b) => a - b); res(1000 / d[Math.floor(d.length / 2)]); } }
+    requestAnimationFrame(step); }); }
+  async function measureRefresh() { for (let i = 0; i < 4; i++) { await waitVisible(); const r = await measureOnce(); if (r >= 40 && r <= 260) return r; } return 60; }
+  async function setupScreen() {
+    refresh = await measureRefresh();
+    k.left = Math.max(2, Math.round(refresh / (60 / 7))); k.right = Math.max(2, Math.round(refresh / 12));
+    if (k.right === k.left) k.right = Math.max(2, k.left - 2);
+    freqs = { left: refresh / k.left, right: refresh / k.right };
+    $('hzInfo').textContent = `${refresh.toFixed(0)} Hz`;
+    $('fL').textContent = `${freqs.left.toFixed(2)} Hz`; $('fR').textContent = `${freqs.right.toFixed(2)} Hz`;
+    send({ type: 'hello', refresh, freqs });
+  }
+
+  // ---------- Stimulus ----------
+  function tile(contrast) {
+    const key = contrast.toFixed(2); if (tiles[key]) return tiles[key];
+    const s = Math.round(48 * devicePixelRatio), t = document.createElement('canvas'); t.width = t.height = 2 * s; const g = t.getContext('2d');
+    const hi = Math.round(128 + 127 * contrast), lo = Math.round(128 - 127 * contrast);
+    g.fillStyle = `rgb(${hi},${hi},${hi})`; g.fillRect(0, 0, 2 * s, 2 * s); g.fillStyle = `rgb(${lo},${lo},${lo})`; g.fillRect(0, 0, s, s); g.fillRect(s, s, s, s);
+    return (tiles[key] = ctx.createPattern(t, 'repeat'));
+  }
+  function drawHalf(x, w, c, on) { ctx.fillStyle = c > 0 && on ? tile(c) : '#808080'; ctx.fillRect(x, 0, w, cv.height); }
+  function drawFixation(now) {
+    const cx = cv.width / 2, cy = cv.height / 2, r = 9 * devicePixelRatio;
+    ctx.fillStyle = '#808080'; ctx.fillRect(cx - 4 * r, 0, 8 * r, cv.height);
+    const steady = trial && /step2$/.test(trial.mode);  // no green flash while attention must go to the sides
+    if (!steady && now > nextFlash) { fixFlashUntil = now + 250; nextFlash = now + 2000 + Math.random() * 3000; }
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.fillStyle = now < fixFlashUntil ? '#00c853' : '#e00000'; ctx.fill();
+  }
+  function render(now) {
+    requestAnimationFrame(render);
+    if (state === 'idle') return;
+    const W = cv.width, gap = Math.round(W * 0.03), half = W / 2;
+    if (state === 'flicker') {
+      drawHalf(0, half - gap, trial.left, (frame % k.left) < Math.floor(k.left / 2));
+      drawHalf(half + gap, half - gap, trial.right, (frame % k.right) < Math.floor(k.right / 2));
+      drawFixation(now); frame++;
+      if (frame === 1) trialT0 = now;
+      if (frame === 61 && trial.mode !== 'check') {  // safety: is the screen still at the rate we measured?
+        const fps = 60000 / (now - trialT0);
+        if (Math.abs(fps - refresh) / refresh > 0.1) { timingFault(fps); return; }
+      }
+      if (framesTotal && frame >= framesTotal) {
+        const fps = (frame - 1) * 1000 / (now - trialT0);
+        if (trial.mode !== 'check' && Math.abs(fps - refresh) / refresh > 0.1) { timingFault(fps); return; }
+        endTrial();
+      }
+    } else { ctx.fillStyle = '#808080'; ctx.fillRect(0, 0, W, cv.height); drawFixation(now); }
+  }
+  requestAnimationFrame(render);
+
+  // ---------- Brain drawings ----------
+  function rng32(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  // Folded-cortex texture: short wandering curves (sulci), clipped to the lobe outline.
+  function sulci(rand, x0, y0, x1, y1, n, step, bend) {
+    let d = '';
+    for (let k = 0; k < n; k++) {
+      let x = x0 + rand() * (x1 - x0), y = y0 + rand() * (y1 - y0);
+      let th = (rand() - 0.5) * 1.6 + (rand() < 0.5 ? 0 : Math.PI);
+      const segs = 4 + Math.floor(rand() * 6);
+      d += `M${x.toFixed(1)} ${y.toFixed(1)}`;
+      for (let j = 0; j < segs; j++) {
+        th += (rand() - 0.5) * bend;
+        const cx = x + Math.cos(th) * step * 0.6, cy = y + Math.sin(th) * step * 0.6;
+        th += (rand() - 0.5) * bend;
+        x += Math.cos(th) * step; y += Math.sin(th) * step;
+        d += `Q${cx.toFixed(1)} ${cy.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}`;
+      }
+    }
+    return d;
+  }
+  const BRAIN_FILL = (P) => `<radialGradient id="${P}ctx" cx="38%" cy="32%" r="80%"><stop offset="0" stop-color="#ead3df"/><stop offset=".55" stop-color="#c3a3c4"/><stop offset="1" stop-color="#7d6a9f"/></radialGradient>
+    <radialGradient id="${P}ctxShade" cx="50%" cy="50%" r="60%"><stop offset=".6" stop-color="#1a1240" stop-opacity="0"/><stop offset="1" stop-color="#1a1240" stop-opacity=".55"/></radialGradient>
+    <radialGradient id="${P}glowL"><stop offset="0" stop-color="#5fe1ff" stop-opacity=".95"/><stop offset="1" stop-color="#5fe1ff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="${P}glowR"><stop offset="0" stop-color="#ffb35c" stop-opacity=".95"/><stop offset="1" stop-color="#ffb35c" stop-opacity="0"/></radialGradient>
+    <radialGradient id="${P}sens"><stop offset="0" stop-color="#7c9cff" stop-opacity=".6"/><stop offset="1" stop-color="#7c9cff" stop-opacity="0"/></radialGradient>`;
+  const SULC = (d, w) => `<path d="${d}" fill="none" stroke="#3b2a5c" stroke-opacity=".55" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="${d}" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="${w * 0.45}" stroke-linecap="round" transform="translate(.5 .6)"/>`;
+
+  // Top view, nose up. Left hemisphere drawn in place, right one mirrored.
+  const HEMI = 'M97.5 36 C78 35 52 46 42 72 C33 94 32 122 36 147 C40 170 55 188 76 194 C86 197 93 197 97.5 195 C96.6 162 96.6 72 97.5 36 Z';
+  function buildTopBrain() {
+    const r1 = rng32(11), r2 = rng32(29);
+    const central = 'M97 98 C84 101 70 104 58 112 C50 117 44 118 37 122';
+    $('hmStatic').innerHTML = `<defs>${BRAIN_FILL('t')}<clipPath id="hemiClip"><path d="${HEMI}"/></clipPath></defs>
+      <path d="M92 26 L100 14 L108 26" fill="none" stroke="${css('--line-strong')}" stroke-width="1.5"/>
+      <ellipse cx="13" cy="114" rx="6" ry="15" fill="none" stroke="${css('--line-strong')}" stroke-width="1.5"/>
+      <ellipse cx="187" cy="114" rx="6" ry="15" fill="none" stroke="${css('--line-strong')}" stroke-width="1.5"/>
+      <circle cx="100" cy="114" r="88" fill="rgba(124,156,255,.04)" stroke="${css('--line-strong')}" stroke-width="1.5"/>
+      ${[0, 1].map(side => `<g ${side ? 'transform="translate(200 0) scale(-1 1)"' : ''}>
+        <path d="${HEMI}" fill="url(#tctx)"/>
+        <g clip-path="url(#hemiClip)">${SULC(sulci(side ? r2 : r1, 30, 30, 100, 200, 70, 4.2, 1.6), 1.6)}${SULC(central, 2.4)}
+          <path d="${HEMI}" fill="url(#tctxShade)"/></g>
+        <path d="${HEMI}" fill="none" stroke="#2a1f4a" stroke-opacity=".7" stroke-width="1"/></g>`).join('')}
+      <text x="100" y="219" text-anchor="middle" font-family="Chakra Petch, Rajdhani, sans-serif" font-size="8.5" letter-spacing="2" fill="${css('--muted')}">BACK · VISUAL CORTEX</text>`;
+  }
+  buildTopBrain();
+
+  const POS = { Fz: [100, 68], C3: [58, 112], Cz: [100, 112], C4: [142, 112], Pz: [100, 152], PO7: [62, 174], POz: [100, 180], PO8: [138, 174],
+                O1: [80, 188], Oz: [100, 192], O2: [120, 188], P3: [70, 150], P4: [130, 150] };
+  function posFor(names) {
+    const unknown = names.filter(n => !POS[n]);
+    const out = {};
+    names.forEach(n => { if (POS[n]) out[n] = POS[n]; });
+    unknown.forEach((n, i) => {  // unlabeled sockets (Core-4): spread across the back of the head
+      const a = (140 - (100 * (i + 0.5)) / unknown.length) * Math.PI / 180;
+      out[n] = [100 + 72 * Math.cos(a), 114 + 72 * Math.sin(a)];
+    });
+    $('mapNote').textContent = unknown.length ? 'sensors on the back' : '10-20 positions';
+    return out;
+  }
+  function snrNear(sp, f) {
+    let peak = 0, noise = 0, nn = 0;
+    sp.forEach(([g, a]) => { const d = Math.abs(g - f); if (d < 0.3) peak = Math.max(peak, a); else if (d <= 1.2) { noise += a; nn++; } });
+    return nn ? peak / Math.max(noise / nn, 1e-9) : 0;
+  }
+  function drawHead(m, power, sp) {
+    const pos = posFor(m.names), qc = { ok: css('--good'), flat: css('--warn'), noisy: css('--bad') };
+    const gL = Math.max(0, Math.min(1, (snrNear(sp, freqs.left) - 1) / 3)), gR = Math.max(0, Math.min(1, (snrNear(sp, freqs.right) - 1) / 3));
+    // Left screen half -> RIGHT occipital cortex (cyan); right half -> LEFT (amber).
+    let s = `<ellipse cx="130" cy="180" rx="${20 + 8 * gL}" ry="${14 + 6 * gL}" fill="url(#tglowL)" opacity="${0.15 + 0.85 * gL}"/>
+             <ellipse cx="70" cy="180" rx="${20 + 8 * gR}" ry="${14 + 6 * gR}" fill="url(#tglowR)" opacity="${0.15 + 0.85 * gR}"/>`;
+    m.names.forEach(n => {
+      const [x, y] = pos[n], q = m.quality[n] || 'flat', p = Math.min(1, (power[n] || 0) / 25);
+      s += `<circle cx="${x}" cy="${y}" r="${8 + 10 * p}" fill="url(#tsens)" opacity="${q === 'ok' ? 0.4 + 0.6 * p : 0.2}"/>
+            <circle cx="${x}" cy="${y}" r="5" fill="${qc[q]}" stroke="#060b1a" stroke-width="1.5"/>
+            <text x="${x}" y="${y - 8}" text-anchor="middle" font-family="JetBrains Mono, Menlo, monospace" font-size="7.5" fill="${css('--text')}" stroke="#060b1a" stroke-width="2.4" paint-order="stroke">${n.replace('socket', 'S')}</text>`;
+    });
+    $('hmDyn').innerHTML = s;
+  }
+
+  // Side view for the About page: screen -> eye -> optic pathway -> visual cortex (back) -> sensors.
+  function buildSideBrain() {
+    const el = $('sideBrain'); if (!el) return;
+    const rand = rng32(7);
+    const CER = 'M150 190 C135 125 185 60 280 53 C375 47 447 97 453 163 C457 201 433 219 400 221 C373 223 353 213 325 217 C287 223 245 227 210 217 C177 209 155 210 150 190 Z';
+    const CBL = 'M335 222 C350 208 395 206 420 216 C440 225 438 250 412 258 C385 266 350 262 338 248 C330 240 330 229 335 222 Z';
+    el.innerHTML = `<defs>${BRAIN_FILL('s')}<clipPath id="cerClip"><path d="${CER}"/></clipPath><clipPath id="cblClip"><path d="${CBL}"/></clipPath>
+        <linearGradient id="beam" x1="0" x2="1"><stop offset="0" stop-color="#5fe1ff"/><stop offset="1" stop-color="#ffb35c"/></linearGradient></defs>
+      <path d="M128 70 C150 18 330 0 430 40 C505 72 520 170 500 230 C488 268 470 300 430 318 L300 318 C292 300 290 286 288 270" fill="none" stroke="${css('--line-strong')}" stroke-width="1.5" stroke-dasharray="3 5"/>
+      <defs><pattern id="chkL" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#1d6f84"/><rect width="5" height="5" fill="#9cf0ff"/><rect x="5" y="5" width="5" height="5" fill="#9cf0ff"/></pattern>
+        <pattern id="chkR" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#8a5a22"/><rect width="5" height="5" fill="#ffd29c"/><rect x="5" y="5" width="5" height="5" fill="#ffd29c"/></pattern>
+        <linearGradient id="rayL" x1="0" x2="1"><stop offset="0" stop-color="#5fe1ff" stop-opacity=".45"/><stop offset="1" stop-color="#5fe1ff" stop-opacity=".05"/></linearGradient>
+        <linearGradient id="rayR" x1="0" x2="1"><stop offset="0" stop-color="#ffb35c" stop-opacity=".45"/><stop offset="1" stop-color="#ffb35c" stop-opacity=".05"/></linearGradient>
+        <radialGradient id="scl" cx="35%" cy="40%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfd6f2"/></radialGradient></defs>
+      <path d="M33 150 L109 176 L109 184 L33 196 Z" fill="url(#rayL)" class="pulseL"/>
+      <path d="M58 158 L109 177 L109 185 L58 204 Z" fill="url(#rayR)" class="pulseR"/>
+      <path d="M35 240 L43 240 L45 262 L33 262 Z" fill="#151f3d" stroke="rgba(130,160,255,.35)"/>
+      <ellipse cx="39" cy="264" rx="24" ry="4.5" fill="#151f3d" stroke="rgba(130,160,255,.35)"/>
+      <g transform="matrix(.78 .2 0 1 8 118)">
+        <rect x="-5" y="-5" width="90" height="120" rx="5" fill="#0a1328" stroke="rgba(130,160,255,.5)" stroke-width="1.2"/>
+        <rect x="1" y="1" width="38" height="108" fill="url(#chkL)"/><rect class="tintL" x="1" y="1" width="38" height="108" fill="#5fe1ff"/>
+        <rect x="41" y="1" width="38" height="108" fill="url(#chkR)"/><rect class="tintR" x="41" y="1" width="38" height="108" fill="#ffb35c"/>
+        <rect x="37" y="1" width="6" height="108" fill="#808080"/>
+        <circle cx="40" cy="55" r="3.2" fill="#e00000" stroke="#060b1a" stroke-width=".8"/></g>
+      <g>
+        <path d="M104 170 C112 160 132 160 140 168" fill="none" stroke="#b9a3c9" stroke-width="2" stroke-linecap="round"/>
+        <path d="M104 190 C112 198 132 198 140 192" fill="none" stroke="#b9a3c9" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="124" cy="180" r="15" fill="url(#scl)" stroke="#8f9ad0" stroke-width="1"/>
+        <path d="M110.5 171 C105.5 175 105.5 185 110.5 189" fill="#e8f4ff" fill-opacity=".7" stroke="#9fb8e8" stroke-width="1"/>
+        <ellipse cx="111.6" cy="180" rx="2.2" ry="8.2" fill="#3a5bd9"/>
+        <ellipse cx="115.8" cy="180" rx="2.8" ry="5.6" fill="#dbe9ff" stroke="#9fb8e8" stroke-width=".8"/>
+        <path d="M137 177 C143 178 146 181 150 183 L149 188 C145 186 141 185 137 184 Z" fill="#c9a6c9"/></g>
+      <path d="${CER}" fill="url(#sctx)"/>
+      <g clip-path="url(#cerClip)">${SULC(sulci(rand, 140, 45, 460, 230, 170, 7, 1.6), 3)}
+        ${SULC('M232 182 C270 172 300 160 345 150', 3.2)}${SULC('M318 55 C305 95 292 130 280 168', 3)}
+        <ellipse cx="438" cy="160" rx="44" ry="50" fill="url(#sglowL)" class="pulseL"/><ellipse cx="438" cy="168" rx="40" ry="44" fill="url(#sglowR)" class="pulseR"/>
+        <path d="${CER}" fill="url(#sctxShade)"/></g>
+      <path d="${CER}" fill="none" stroke="#2a1f4a" stroke-width="1.2"/>
+      <path d="${CBL}" fill="#b293b7"/><g clip-path="url(#cblClip)">${[0, 1, 2, 3, 4, 5, 6].map(i => `<path d="M330 ${214 + i * 7} C365 ${206 + i * 7} 400 ${208 + i * 7} 440 ${218 + i * 7}" fill="none" stroke="#3b2a5c" stroke-opacity=".5" stroke-width="1.6"/>`).join('')}</g>
+      <path d="${CBL}" fill="none" stroke="#2a1f4a" stroke-width="1.2"/>
+      <path d="M318 214 C322 245 326 272 322 310 L346 310 C344 272 346 246 350 216 Z" fill="#a98fb3" stroke="#2a1f4a" stroke-width="1.2"/>
+      <path d="M148 185 C190 196 250 200 300 190 C350 180 400 168 432 160" fill="none" stroke="url(#beam)" stroke-width="2.4" stroke-opacity=".95" class="flow"/>
+      ${[[478, 120], [492, 150], [494, 182], [484, 212]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="9" fill="url(#ssens)"/><circle cx="${x}" cy="${y}" r="5" fill="${css('--good')}" stroke="#060b1a" stroke-width="1.5"/>`).join('')}
+      <g font-family="Manrope, sans-serif" font-size="12.5" fill="#c3cbec">
+        <text x="4" y="104">Screen: two halves flicker</text><text x="4" y="290" font-size="11.5"><tspan fill="#5fe1ff">8.57 Hz</tspan><tspan fill="${css('--muted')}"> · </tspan><tspan fill="#ffb35c">12 Hz</tspan></text><text x="4" y="306" font-size="11" fill="${css('--muted')}">eyes stay on the red dot</text>
+        <text x="60" y="330" fill="${css('--muted')}" font-size="11.5">eye → optic pathway → visual cortex (back of the brain)</text>
+        <text x="536" y="22" text-anchor="end">Visual cortex pulses at the</text><text x="536" y="38" text-anchor="end">rate of the side you attend to</text>
+        <line x1="470" y1="44" x2="448" y2="112" stroke="${css('--line-strong')}"/>
+        <text x="530" y="250" text-anchor="end">4 dry sensors</text><line x1="500" y1="240" x2="488" y2="218" stroke="${css('--line-strong')}"/></g>`;
+  }
+  buildSideBrain();
+
+  // ---------- Live signal + spectrum ----------
+  const tc = $('trace'), tx = tc.getContext('2d'), sc = $('spec'), sx = sc.getContext('2d');
+  function fit(c, g) { const w = c.clientWidth, h = c.clientHeight, d = devicePixelRatio; if (c.width !== Math.round(w * d)) { c.width = Math.round(w * d); c.height = Math.round(h * d); } g.setTransform(d, 0, 0, d, 0, 0); return [w, h]; }
+  function drawTrace(m) {
+    const [w, h] = fit(tc, tx); tx.clearRect(0, 0, w, h);
+    const n = m.data.length, lane = h / n, left = 52, pw = w - left - 4;
+    tx.strokeStyle = 'rgba(130,160,255,.08)'; tx.lineWidth = 1;
+    for (let s = 0; s <= 8; s++) { const x = left + pw * s / 8; tx.beginPath(); tx.moveTo(x, 0); tx.lineTo(x, h); tx.stroke(); }
+    const scale = lane / 2 / 40;
+    tx.font = '11px "JetBrains Mono", monospace'; tx.textBaseline = 'middle';
+    m.data.forEach((row, i) => {
+      const y0 = lane * i + lane / 2, q = m.quality[m.names[i]], good = q === 'ok';
+      tx.fillStyle = good ? css('--text') : css('--muted'); tx.fillText(m.names[i], 4, y0);
+      tx.strokeStyle = good ? '#8fb2ff' : q === 'flat' ? css('--warn') : css('--bad');
+      tx.shadowColor = tx.strokeStyle; tx.shadowBlur = good ? 6 : 0; tx.lineWidth = 1.3; tx.globalAlpha = good ? 1 : 0.6;
+      tx.beginPath();
+      row.forEach((v, j) => { const x = left + pw * j / (row.length - 1), y = y0 - Math.max(-40, Math.min(40, v)) * scale; j ? tx.lineTo(x, y) : tx.moveTo(x, y); });
+      tx.stroke(); tx.shadowBlur = 0; tx.globalAlpha = 1;
+    });
+  }
+  function spectrum(m) {
+    const good = m.data.filter((_, i) => m.quality[m.names[i]] === 'ok');
+    const rows = good.length ? good : m.data, fs = m.fs, out = [];
+    for (let f = 3; f <= 30.01; f += 0.25) {
+      let acc = 0;
+      rows.forEach(row => { let re = 0, im = 0; const N = row.length;
+        for (let j = 0; j < N; j++) { const wv = 0.5 - 0.5 * Math.cos(2 * Math.PI * j / (N - 1)), a = 2 * Math.PI * f * j / fs; re += row[j] * wv * Math.cos(a); im -= row[j] * wv * Math.sin(a); }
+        acc += Math.hypot(re, im) / N; });
+      out.push([f, acc / rows.length]);
+    }
+    return out;
+  }
+  function drawSpec(m, sp) {
+    const [w, h] = fit(sc, sx); sx.clearRect(0, 0, w, h);
+    const max = Math.max(...sp.map(p => p[1]), 0.5), x = f => 8 + (w - 16) * (f - 3) / 27, bw = (w - 16) / sp.length;
+    [freqs.left, freqs.right].forEach((f, i) => { sx.fillStyle = i ? 'rgba(255,179,92,.12)' : 'rgba(95,225,255,.12)'; sx.fillRect(x(f) - 6, 0, 12, h - 16); });
+    sp.forEach(([f, a]) => {
+      const near = Math.abs(f - freqs.left) < 0.3 ? css('--left') : Math.abs(f - freqs.right) < 0.3 ? css('--right') : 'rgba(143,178,255,.55)';
+      const bh = (h - 22) * a / max; sx.fillStyle = near; sx.fillRect(x(f) - bw / 2 + 0.5, h - 16 - bh, Math.max(1, bw - 1), bh);
+    });
+    sx.fillStyle = css('--muted'); sx.font = '10px "JetBrains Mono", monospace'; sx.textAlign = 'center';
+    [5, 10, 15, 20, 25, 30].forEach(f => sx.fillText(`${f}`, x(f), h - 4));
+  }
+  function drawAll(m) {
+    lastTrace = m;
+    const power = {}; m.data.forEach((row, i) => { let s = 0; row.forEach(v => s += v * v); power[m.names[i]] = Math.sqrt(s / row.length); });
+    const sp = spectrum(m);
+    drawHead(m, power, sp); drawTrace(m); drawSpec(m, sp);
+  }
+
+  // ---------- HUD ----------
+  const STEP = { 'awareness-step1': 'PART 1 OF 2 · SIGNAL CHECK', 'awareness-step2': 'PART 2 OF 2 · FOCUS LEFT / RIGHT', 'answers-step1': 'PART 1 OF 2 · SIGNAL CHECK', 'answers-step2': 'PART 2 OF 2 · YES / NO QUESTIONS', 'eyesclosed-step1': 'PART 1 OF 2 · EYES-CLOSED SIGNAL CHECK', 'eyesclosed-step2': 'PART 2 OF 2 · MENTAL MATH OR RELAX', calibrate: 'CALIBRATION', test: 'BLINDED LEFT / RIGHT', contrast: 'CONTRAST CURVE', check: 'HEADSET CHECK' };
+  function hudSet(m) {
+    $('hStep').textContent = STEP[m.mode] || 'RUNNING';
+    $('hCount').textContent = m.mode === 'check' ? 'ESC TO STOP' : `TURN ${m.i + 1} OF ${m.n}${plan ? ` · PASS AT ${plan.bar}` : ''} · ESC TO STOP`;
+    $('hSegs').innerHTML = m.mode === 'check' ? '<i class="now"></i>' : Array.from({ length: m.n }, (_, j) => `<i class="${j < m.i ? 'done' : j === m.i ? 'now' : ''}"></i>`).join('');
+  }
+  function hudCmd(main, sub, side) { const el = $('hCmd'); if (!main) { el.style.display = 'none'; return; }
+    el.innerHTML = `<b class="${side || ''}">${main}</b>${sub ? `<small>${sub}</small>` : ''}`; el.style.display = 'block'; }
+  function hudMsg(t) { const el = $('hMsg'); el.textContent = t || ''; el.style.display = t ? 'block' : 'none'; if (t) $('hMeter').style.display = 'none'; }
+  function hudMeter(snr) { const el = $('hMeter'); if (!snr) { el.style.display = 'none'; return; }
+    $('hMsg').style.display = 'none'; el.style.display = 'block';
+    $('mL').style.width = `${Math.min(100, 25 * snr.left)}%`; $('mR').style.width = `${Math.min(100, 25 * snr.right)}%`;
+    $('vL').textContent = `L ${snr.left.toFixed(2)}`; $('vR').textContent = `R ${snr.right.toFixed(2)}`; }
+
+  // ---------- Flow ----------
+  function send(m) { ws && ws.readyState === 1 && ws.send(JSON.stringify(m)); }
+  function view(v) {
+    if (v === 'home') lockInputs(false);
+    if (v !== 'run') { $('ynY').style.display = 'none'; $('ynN').style.display = 'none'; }
+    panel.classList.toggle('hidden', v !== 'home'); $('about').classList.toggle('on', v === 'about');
+    $('topbar').classList.toggle('hidden', v !== 'home' && v !== 'about');
+    $('navAbout').classList.toggle('on', v === 'about'); $('navDemo').classList.toggle('on', v === 'home');
+    results.classList.toggle('on', v === 'results'); hud.classList.toggle('on', v === 'run');
+    if (v !== 'run') state = 'idle';
+    if (v === 'home' && lastTrace) requestAnimationFrame(() => drawAll(lastTrace));
+  }
+  function speak(t) { try { const u = new SpeechSynthesisUtterance(t); u.rate = 0.95; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {} }
+  function startTrial(m) {
+    trial = m; view('run'); state = 'prep'; hudSet(m); hudMeter(null); hudMsg('');
+    let wait = 1500;
+    const yn = m.mode === 'answers-step2';
+    $('ynY').style.display = yn ? 'block' : 'none'; $('ynN').style.display = yn ? 'block' : 'none';
+    const ec = m.mode.startsWith('eyesclosed');
+    if (ec) { hudCmd(m.command === 'math' ? 'COUNT BACKWARDS' : 'RELAX', `${m.prompt || ''} · eyes closed, no movement`); if (m.prompt) speak(m.prompt); wait = m.command === 'math' ? 4500 : 3000; }
+    else if (m.question) { hudCmd(m.question, 'Answer by focusing on ◀ YES or NO ▶ · eyes stay on the red dot'); speak(`${m.question} Focus on yes, or no.`); wait = 4500; }
+    else if (m.command) { const L = m.command === 'left'; hudCmd(L ? '◀ FOCUS LEFT' : 'FOCUS RIGHT ▶', 'Eyes stay on the red dot', L ? 'L' : 'R'); speak(`Focus on the ${m.command} side.`); wait = 3000; }
+    else if (m.mode === 'awareness-step1' || m.mode === 'answers-step1') hudCmd('JUST LOOK AT THE RED DOT', m.left > 0 ? 'Checking that we can pick up the flicker' : 'Gray screen, for comparison');
+    else if (m.mode === 'check') hudCmd('HEADSET CHECK', 'Look at the red dot, then "left", then "right". Watch the bars at the bottom.');
+    else hudCmd('LOOK AT THE DOT');
+    setTimeout(() => { if (state !== 'prep') return; hudCmd(null); if (ec) hudMsg(m.command === 'math' ? 'Counting backwards... (eyes closed)' : 'Relaxing... (eyes closed)'); frame = 0; framesTotal = Math.round(m.duration * refresh); state = 'flicker'; send({ type: 'trial_started', i: m.i }); }, wait);
+  }
+  let trialT0 = 0;
+  function timingFault(fps) {
+    state = 'rest'; send({ type: 'trial_ended', i: trial.i }); send({ type: 'stop' }); view('home');
+    alert(`Stopped for safety: the screen ran at ${fps.toFixed(0)} Hz but was measured at ${refresh.toFixed(0)} Hz, so the flicker rates were wrong. Use Chrome, turn off Low Power Mode, and try again.`);
+  }
+  function endTrial() { if (state !== 'flicker') return; state = 'rest'; send({ type: 'trial_ended', i: trial.i }); }
+  const f2 = x => (x ?? 0).toFixed(2);
+  const esc = s => String(s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  function onMessage(m) {
+    if (m.type === 'hello_ack') {
+      $('srcName').textContent = m.source === 'sim' ? 'Simulated EEG' : m.source === 'lsl' ? 'BCI Core · g.Pype' : `Headset · ${m.source}`;
+      $('liveDot').className = 'live-dot on'; $('chInfo').textContent = `${m.channels.length} ch · ${m.fs} Hz`;
+      if (m.min_gap_h != null) { minGap = m.min_gap_h; sitText(); }
+      guide.connected = true; updateGuide();
+      btns.forEach(b => b.disabled = false);
+    } else if (m.type === 'trace') { guide.total = m.names.length; guide.sensors = m.names.filter(n => m.quality[n] === 'ok').length; updateGuide(); if (state === 'idle' && !panel.classList.contains('hidden')) drawAll(m); else lastTrace = m;
+    } else if (m.type === 'trial') { startTrial(m);
+    } else if (m.type === 'live') { if (trial && trial.mode.startsWith('eyesclosed')) return; if (m.score) hudMeter(m.score.snr); else hudMsg(`Collecting data... ${m.n_samples} samples`);
+    } else if (m.type === 'trial_done') { hudMeter(null);
+      hudMsg(trial && trial.mode.startsWith('eyesclosed') ? 'Rest · keep your eyes closed' : m.score ? `Rest · blink and relax\nL ${f2(m.score.snr.left)} · R ${f2(m.score.snr.right)}` : 'Rest · blink and relax');
+      setTimeout(() => { hudMsg(''); send({ type: 'ready' }); }, 3000);
+    } else if (m.type === 'plan') { plan = m;
+    } else if (m.type === 'step1_done') { hudMeter(null); hudMsg(trial && trial.mode.startsWith('eyesclosed') ? (m.visual_on ? 'Alpha rhythm found' : 'No clear alpha rhythm · stopping') : m.visual_on ? 'Visual pathway confirmed' : 'Visual pathway not confirmed · stopping');
+    } else if (m.type === 'summary') { hudMsg('');
+      if (m.mode === 'check') guide.checked = true;
+      if (['awareness', 'answers', 'eyesclosed'].includes(m.mode) && m.outcome) guide.tested = true;
+      updateGuide(); showSummary(m); }
+  }
+
+  function ring(frac, color) {
+    const r = 120, c = 2 * Math.PI * r;
+    return `<svg viewBox="0 0 300 300"><circle cx="150" cy="150" r="${r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="18"/>
+      <circle id="ringArc" cx="150" cy="150" r="${r}" fill="none" stroke="${color}" stroke-width="18" stroke-linecap="round"
+        stroke-dasharray="${c}" stroke-dashoffset="${c}" style="transition: stroke-dashoffset 1.4s cubic-bezier(.2,.8,.2,1); filter: drop-shadow(0 0 10px ${color})" data-target="${c * (1 - frac)}"/></svg>`;
+  }
+  function reportHead(title) {
+    return `<h1>StillHere · Bedside visual command screen${title}</h1>
+      <table><tr><th>Patient ID</th><td>${esc($('pid').value)}</td></tr><tr><th>Examiner</th><td>${esc($('exam').value) || '-'}</td></tr>
+      <tr><th>Date</th><td>${new Date().toLocaleString()}</td></tr><tr><th>Session</th><td>${sitting.slice(0, 8)} (started ${sitStart.toLocaleString()})</td></tr>
+      <tr><th>Device</th><td>${esc($('srcName').textContent)} · ${esc($('chInfo').textContent)}</td></tr>`;
+  }
+  function printAbort(m) {
+    $('print').innerHTML = `${reportHead(m.mode === 'answers' ? ' · Yes/No test' : ' · Command test')}
+      <tr><th>Finding</th><td><b>${esc(m.reason || ABORT)}</b></td></tr></table>
+      <div class="sig"><div>Reviewed by</div><div>Date</div></div>`;
+  }
+  function printReport(m, verdict, interp) {
+    const YN = m.mode === 'answers', EC = m.mode === 'eyesclosed';
+    $('print').innerHTML = `${reportHead(YN ? ' · Yes/No test' : EC ? ' · Eyes-closed test' : ' · Command test')}
+      <tr><th>Trials planned</th><td>${m.n} · bar: ${m.bar} or more correct</td></tr>
+      <tr><th>Finding</th><td><b>${verdict}</b>${m.note ? `<br>${esc(m.note)}` : ''}</td></tr>
+      <tr><th>01 ${EC ? 'Eyes-closed alpha' : 'Visual pathway'}</th><td>${EC ? 'Clear alpha rhythm found' : 'Confirmed (flicker on vs blank)'}</td></tr>
+      <tr><th>02 ${YN ? 'Known-answer questions matched' : EC ? 'Math vs rest matched' : 'Commands matched'}</th><td>${m.followed} / ${m.n} (${m.n / 2} expected by chance) · p = ${m.p_chance.toFixed(3)}<br><small>${PNOTE}</small></td></tr>
+      <tr><th>Sequence</th><td>${m.results.map(r => `${YN ? (r.command === 'left' ? 'Y' : 'N') : EC ? (r.command === 'left' ? 'M' : 'R') : (r.command === 'left' ? 'L' : 'R')}${r.command === r.brain ? '✓' : '✗'}`).join('  ')}</td></tr>
+      <tr><th>Next step</th><td>${interp}</td></tr>
+      <tr><th>Every run for this patient</th><td><table>${histRows(m.history)}</table></td></tr></table>
+      <p style="font-size:11px">${EC ? 'Eyes-closed alpha (8-13 Hz), mental math vs rest. M = math, R = rest.' : `Frequency-tagged visual stimulation (L ${freqs.left.toFixed(2)} Hz, R ${freqs.right.toFixed(2)} Hz).`} Classifier saw EEG only. Research prototype, not a diagnostic device.</p>
+      <div class="sig"><div>Reviewed by</div><div>Date</div></div>`;
+  }
+
+  function showSummary(m) {
+    if (m.mode === 'stopped' || m.mode === 'check') { view('home'); if (m.counted) alert('Stopped after scoring began. This counts as a run for this patient and resets any pending pass.'); return; }
+    if (m.mode === 'invalid') { view('home'); alert(m.reason); return; }
+    let html = '';
+    const back = `<div class="res-actions"><button class="go" id="again">Run again</button><button class="ghost" id="home">Back to console</button>${['awareness', 'answers', 'eyesclosed'].includes(m.mode) ? '<button class="ghost" id="prt">Print report</button>' : ''}</div>`;
+    if (m.results) m.results = m.results.map(r => m.mode === 'eyesclosed'
+      ? { ...r, command: r.target === 'math' ? 'left' : 'right', brain: r.brain === 'math' ? 'left' : 'right' }
+      : { ...r, command: r.target });
+    if (['awareness', 'answers', 'eyesclosed'].includes(m.mode) && m.outcome === 'not_interpretable') {
+      printAbort(m);
+      html = `<div class="res-top"><span class="k">STILLHERE // RESULT · ${esc($('pid').value)}</span><span class="k">${new Date().toLocaleString()}</span></div>
+        <div class="abort"><p class="verdict bad">${esc(m.reason || ABORT)}</p>${back}</div>`;
+    } else if (['awareness', 'answers', 'eyesclosed'].includes(m.mode)) {
+      const YN = m.mode === 'answers', EC = m.mode === 'eyesclosed';
+      m.followed = m.correct;
+      const v = OUTCOME[m.outcome] || OUTCOME.no_conclusion;
+      const interp = m.outcome === 'refer' ? 'Passed twice in a row. Worth referring for a full assessment. This is a screening result, not a diagnosis.'
+        : m.outcome === 'pass1' ? `Passed this run. One run isn't enough, so test again${minGap > 0 ? ` in at least ${minGap} hours` : ' later'}.`
+        : "Didn't pass this time. That doesn't mean the person isn't aware, it just means we couldn't tell.";
+      const color = v[0] === 'good' ? css('--good') : v[0] === 'info' ? css('--brand') : css('--muted');
+      printReport(m, v[1], interp);
+      html = `<div class="res-top"><span class="k">STILLHERE // RESULT · ${esc($('pid').value)}</span><span class="k">${new Date().toLocaleString()}</span></div>
+        <div class="planline">TRIALS PLANNED: ${m.n} · BAR: ${m.bar} OR MORE CORRECT · SENSORS LOCKED AT STEP 01</div>
+        <div class="res-main">
+          <div><div class="ring">${ring(m.followed / m.n, color)}<div class="c"><b>${m.followed}/${m.n}</b><span>matched<br>${m.n / 2} expected by chance</span></div></div></div>
+          <div>
+            <p class="verdict ${v[0]}">${v[1]}</p>
+            ${m.note ? `<p class="fine">${esc(m.note)}</p>` : ''}
+            <div class="kv">
+              <div><div class="k">${EC ? 'Alpha rhythm' : 'Visual pathway'}</div><div class="v" style="color:${css('--good')}">Confirmed</div><div class="fine">step 01 passed</div></div>
+              <div><div class="k">Preset bar</div><div class="v">${m.bar} of ${m.n}</div><div class="fine">locked before the run</div></div>
+              <div><div class="k">p (chance)</div><div class="v">${m.p_chance.toFixed(3)}</div><div class="fine">exact permutation</div></div>
+            </div>
+            <p class="pnote">${PNOTE}</p>
+            <div class="k fine" style="letter-spacing:.16em;font-family:var(--font-display);margin-top:14px">${YN ? 'ANSWERS (EXPECTED)' : EC ? 'MATH / REST SEQUENCE' : 'COMMAND SEQUENCE'}</div>
+            <div class="seq">${m.results.map(r => `<div title="${esc(r.question || '')}" class="${r.command === 'left' ? 'L' : 'R'} ${r.command === r.brain ? '' : 'miss'}">${YN ? (r.command === 'left' ? 'YES' : 'NO') : EC ? (r.command === 'left' ? 'MATH' : 'REST') : (r.command === 'left' ? '◀ L' : 'R ▶')}<small>${r.command === r.brain ? '✓' : '✗'} ${r.i + 1}</small></div>`).join('')}</div>
+            <p class="interp">${interp}</p>
+            <p class="fine">The classifier saw EEG only and never the ${YN ? 'expected answer' : 'command'}. Research prototype; not a diagnostic device.</p>
+            <details class="fine" open><summary>Every run for this patient</summary><table class="dat"><tr><th>#</th><th>When</th><th>Test</th><th>Matched</th><th>Outcome</th></tr>${histRows(m.history)}</table></details>
+            <details class="fine"><summary>Trial data</summary><table class="dat">${EC
+              ? `<tr><th>#</th><th>Asked</th><th>EEG call</th><th>alpha (log)</th></tr>${m.results.map(r => `<tr><td>${r.i + 1}</td><td>${r.target}</td><td>${r.brain === 'left' ? 'math' : 'rest'}</td><td>${f2(r.alpha)}</td></tr>`).join('')}`
+              : `<tr><th>#</th>${YN ? '<th>Question</th>' : ''}<th>${YN ? 'Expected' : 'Command'}</th><th>EEG ${YN ? 'answer' : 'favored'}</th><th>SNR L</th><th>SNR R</th><th>log L/R</th></tr>${m.results.map(r =>
+              `<tr><td>${r.i + 1}</td>${YN ? `<td>${esc(r.question)}</td>` : ''}<td>${YN ? (r.command === 'left' ? 'yes' : 'no') : r.command}</td><td>${YN ? (r.brain === 'left' ? 'yes' : 'no') : r.brain}</td><td>${f2(r.snr.left)}</td><td>${f2(r.snr.right)}</td><td>${f2(r.ratio)}</td></tr>`).join('')}`}</table></details>
+            ${back}
+          </div>
+        </div>`;
+    } else if (m.mode === 'calibrate') {
+      html = `<div class="res-top"><span class="k">CALIBRATION</span></div><p class="verdict good">Thresholds set · L ${f2(m.thresholds.left)} · R ${f2(m.thresholds.right)}</p>${back}`;
+    } else if (m.mode === 'test') {
+      html = `<div class="res-top"><span class="k">BLINDED LEFT / RIGHT</span></div><p class="verdict">${m.correct} / ${m.n} correct <span class="fine">(chance 33%)</span></p>
+        <table class="dat"><tr><th>Hidden</th><th>EEG said</th><th>SNR L / R</th></tr>${m.results.map(r => `<tr><td>${r.truth}</td><td>${r.predicted}</td><td>${f2(r.snr.left)} / ${f2(r.snr.right)}</td></tr>`).join('')}</table>${back}`;
+    } else if (m.mode === 'contrast') {
+      html = `<div class="res-top"><span class="k">CONTRAST CURVE · RIGHT</span></div><table class="dat"><tr><th>Contrast</th><th>SNR R</th><th>SNR L</th></tr>${m.steps.map(s => `<tr><td>${Math.round(s.contrast * 100)}%</td><td>${f2(s.snr_right)}</td><td>${f2(s.snr_left)}</td></tr>`).join('')}</table>${back}`;
+    }
+    $('resBody').innerHTML = html; view('results');
+    const arc = $('ringArc'); if (arc) requestAnimationFrame(() => requestAnimationFrame(() => arc.setAttribute('stroke-dashoffset', arc.dataset.target)));
+    $('again').onclick = () => INTRO[m.mode] ? (view('home'), openIntro(m.mode)) : run(m.mode);
+    $('home').onclick = () => view('home');
+    if ($('prt')) $('prt').onclick = () => window.print();
+  }
+
+  function qCounts() { const q = parseQs(); return [q.filter(x => x.answer === 'yes').length, q.filter(x => x.answer === 'no').length]; }
+  function updateBar() { const [y, n] = qCounts(); $('barInfo').textContent = `Yes/No list: ${y} YES, ${n} NO (needs 6 of each).`; }
+  function sitText() { $('sitInfo').textContent = minGap > 0 ? `One scored run per patient every ${minGap} h, enforced by the server. Every run is logged and printed on the sheet.` : `Development mode: no gap between scored runs. Do not use for a real screen.`; }
+  function lockInputs(on) { ['pid', 'exam', 'dur', 'qs'].forEach(id => $(id).disabled = on); }
+  sitText();
+  function parseQs() {
+    return $('qs').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+      const [text, ans] = l.split('|').map(x => (x || '').trim());
+      return { text, answer: (ans || 'yes').toLowerCase().startsWith('y') ? 'yes' : 'no' };
+    }).filter(q => q.text);
+  }
+  async function run(mode) {
+    const scored = ['awareness', 'answers', 'eyesclosed'].includes(mode);
+    if (scored) {
+      if (!$('pid').value.trim()) { alert('Enter a patient ID first.'); return; }
+      if (mode === 'answers' && Math.min(...qCounts()) < 6) { alert('The Yes/No test needs at least 6 YES and 6 NO questions.'); return; }
+      plan = null; $('print').innerHTML = ''; $('resBody').innerHTML = ''; lockInputs(true); speak(' '); }
+    await setupScreen();
+    send({ type: 'run', mode, duration: +$('dur').value, questions: mode === 'answers' ? parseQs() : [],
+           patient: $('pid').value.trim(), sitting }); }
+
+  // ---------- Instructions shown before each test ----------
+  const FLICKER_SAFETY = 'They have <b>no history of seizures or epilepsy</b>, and flickering lights have never made them unwell. <span class="must">(required)</span>';
+  const SETUP = ['They sit back 50 to 60 cm from the screen, with the red dot at eye level.', 'The room is dim and quiet, phones away, volume up.'];
+  const INTRO = {
+    check: { title: 'Headset check', time: () => 'About 1 minute · not scored · press Esc when done',
+      subject: ['Keep your eyes on the red dot in the middle to start.',
+                'When I say "left", look straight at the left half of the screen. When I say "right", look straight at the right half.',
+                'Try not to blink while it flickers. Relax your jaw and shoulders.',
+                'Say "stop" anytime and I\'ll stop it.'],
+      checks: [...SETUP], safety: true,
+      watch: '<b>What to watch:</b> the meter at the bottom. When they look left, the <b style="color:var(--left)">cyan</b> bar should grow. When they look right, the <b style="color:var(--right)">amber</b> bar should grow. Around <b>2 or more</b> on the side they look at is good. Around 1 means fix the sensors first.' },
+    awareness: { title: 'Command test', time: () => `About ${est(3, 12)} minutes · scored · 12 turns`,
+      subject: ['This takes about {T} minutes. Just sit still and listen. No moving, talking or pressing anything. The headset only listens.',
+                'Keep your eyes on the red dot the whole time. Don\'t look at the sides, someone will be watching your eyes.',
+                'For the first minute, just look at the dot. We\'re checking we can pick up your signal.',
+                'Then a voice says "focus on the left side" or "the right side". Keep looking at the dot, but put your attention on that side, like a spotlight, or like noticing someone waving at the edge of your vision.',
+                'Hold it until the flicker stops. If your mind wanders, bring it back. Left and right are mixed up, so don\'t guess ahead.',
+                'Try not to blink while it flickers. Blink and relax when the screen goes gray.',
+                'Quick practice now: look at the dot. Without moving your eyes, notice the left side. Now the right. That\'s all it is.'],
+      checks: ['This is a new patient ID: <b>{PID}</b>', ...SETUP, 'Someone can watch their eyes during the test.'], safety: true,
+      watch: '<b>What you\'ll see:</b> first 3 short screens (flicker, gray, flicker). Then 12 turns, each with a big FOCUS LEFT or FOCUS RIGHT card and the voice. The meter at the bottom should lean a little toward the side that was asked. At the end you get the result.' },
+    answers: { title: 'Yes / No test', time: () => `About ${est(3, 12)} minutes · scored · 12 questions`,
+      subject: ['This takes about {T} minutes. Just sit still and listen. No moving or talking.',
+                'Keep your eyes on the red dot the whole time. The left half means YES, the right half means NO.',
+                'You\'ll hear easy questions, like "Is the sky blue?". To answer, keep looking at the dot and put your attention on the YES side or the NO side.',
+                'Hold your answer until the flicker stops. Try not to blink while it flickers.',
+                'For the first minute, just look at the dot.',
+                'Quick practice now: look at the dot. Think "yes" by noticing the left side. Think "no" by noticing the right side.'],
+      checks: ['This is a new patient ID: <b>{PID}</b>', ...SETUP, 'The question list has at least 6 yes and 6 no questions.'], safety: true,
+      watch: '<b>What you\'ll see:</b> 3 short check screens, then 12 questions with YES and NO labels on the sides. The meter should lean toward the right answer\'s side. At the end you get the result.' },
+    eyesclosed: { title: 'Eyes-closed test', time: () => `About ${est(2, 12)} minutes · scored · 12 turns · no flicker`,
+      subject: ['This takes about {T} minutes. Keep your eyes closed the whole time. Nothing to look at, just listen.',
+                'First, about 20 seconds of just relaxing with your eyes closed.',
+                'Then the voice says either "count backwards from a number by sevens" (like 734, 727, 720) or "just relax, don\'t count anything".',
+                'When it says count, really try, and keep going until it stops. Do it in your head with your lips and jaw still.',
+                'When it says relax, let your mind go quiet. No math, no planning.',
+                'Stay still with your eyes closed, even between turns. Say "stop" anytime.'],
+      checks: ['This is a new patient ID: <b>{PID}</b>', 'They sit back comfortably. The room is quiet, volume up.', 'They understand they keep their eyes closed the whole time.'], safety: false,
+      watch: '<b>What you\'ll see:</b> the screen shows COUNT BACKWARDS or RELAX for you, and the voice tells them. Their alpha waves (the hump around 10 Hz) should get smaller during counting. At the end you get the result.' },
+  };
+  function est(step1, n) { const d = +$('dur').value || 10, per = d + 6.5; return Math.round(((step1 + n) * per) / 60); }
+  let introMode = null;
+  function openIntro(mode) {
+    const I = INTRO[mode]; if (!I) return run(mode);
+    introMode = mode;
+    const T = I.time(), mins = (T.match(/About (\d+)/) || [])[1] || '';
+    $('iTitle').textContent = I.title; $('iTime').textContent = T;
+    $('iSubject').innerHTML = I.subject.map(x => `<li>${esc(x.replace('{T}', mins))}</li>`).join('');
+    const items = I.checks.map(x => x.replace('{PID}', esc($('pid').value.trim() || '(enter one first)')));
+    if (I.safety) items.unshift(FLICKER_SAFETY);
+    $('iOperator').innerHTML = items.map((x, i) => `<li><label><input type="checkbox" data-req="${I.safety && i === 0 ? 1 : 0}"><span>${x}</span></label></li>`).join('');
+    $('iWatch').innerHTML = I.watch;
+    $('iOperator').querySelectorAll('input').forEach(c => c.onchange = introCheck); introCheck();
+    $('intro').classList.add('on');
+  }
+  function introCheck() {
+    const req = [...$('iOperator').querySelectorAll('input[data-req="1"]')].every(c => c.checked);
+    const pidOk = introMode === 'check' || !!$('pid').value.trim();
+    $('iStart').disabled = !(req && pidOk);
+    $('iWarn').textContent = !pidOk ? 'Enter a patient ID first.' : !req ? 'Tick the safety line to start.' : 'Opens full screen. Press Esc anytime to stop.';
+  }
+  function closeIntro() { $('intro').classList.remove('on'); try { speechSynthesis.cancel(); } catch (e) {} }
+  $('iCancel').onclick = closeIntro;
+  $('iRead').onclick = () => speak([...$('iSubject').querySelectorAll('li')].map(li => li.textContent).join(' '));
+  $('iStart').onclick = async () => {
+    const mode = introMode; closeIntro();
+    try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); } catch (e) {}
+    setTimeout(() => run(mode), 600);
+  };
+
+  // ---------- First-timer guide strip ----------
+  const guide = { connected: false, sensors: 0, total: 0, checked: false, tested: false };
+  function setStep(id, cls, text) { const el = $(id); el.classList.remove('done', 'warn', 'now'); if (cls) el.classList.add(cls); if (text) $('gs' + id.slice(1)).textContent = text; }
+  function updateGuide() {
+    setStep('g1', guide.connected ? 'done' : 'now', guide.connected ? `Connected: ${$('srcName').textContent}` : 'Waiting for the app to connect...');
+    const allOk = guide.total && guide.sensors === guide.total, enough = guide.sensors >= 2;
+    setStep('g2', !guide.connected ? '' : allOk ? 'done' : enough ? 'warn' : 'now',
+      !guide.total ? 'Dots on the brain should be green.' : `${guide.sensors} of ${guide.total} sensors touching${allOk ? '.' : enough ? '. OK, but better if all are green.' : '. Part the hair under the others.'}`);
+    setStep('g3', guide.checked ? 'done' : guide.connected && enough ? 'now' : '', guide.checked ? 'Done. Run it again anytime.' : 'Look left, then right. The bars should swap.');
+    setStep('g4', guide.tested ? 'done' : guide.checked ? 'now' : '', guide.tested ? 'Done. Use a new patient ID for the next one.' : 'Pick one on the right. Instructions come first.');
+  }
+  updateGuide();
+
+  $('qs').addEventListener('input', updateBar); updateBar();
+  $('bAware').onclick = () => openIntro('awareness');
+  $('bEC').onclick = () => openIntro('eyesclosed');
+  $('bYN').onclick = () => openIntro('answers');
+  $('bCheck').onclick = () => openIntro('check');
+  $('bCal').onclick = () => run('calibrate');
+  $('bTest').onclick = () => run('test');
+  $('bCon').onclick = () => run('contrast');
+  $('bFull').onclick = async () => { try { await document.documentElement.requestFullscreen(); } catch (e) {} setTimeout(setupScreen, 800); };
+  addEventListener('keydown', e => { if (e.key === 'Escape' && $('intro').classList.contains('on')) { closeIntro(); return; } if (e.key === 'Escape') { if (state === 'flicker') endTrial(); else if (state === 'prep') state = 'rest'; send({ type: 'stop' }); } });
+
+  $('navAbout').onclick = () => view('about');
+  $('navDemo').onclick = () => view('home');
+  document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => view(b.dataset.go));
+  document.querySelectorAll('[data-jump]').forEach(b => b.onclick = () => document.getElementById(b.dataset.jump).scrollIntoView());
+  view(location.hash === '#demo' ? 'home' : 'about');
+
+  btns.forEach(b => b.disabled = true);
+  ws = new WebSocket(`ws://${location.host}/ws`);
+  ws.onopen = () => setupScreen();
+  ws.onmessage = e => onMessage(JSON.parse(e.data));
+  ws.onclose = () => { $('srcName').textContent = 'Disconnected · restart server and reload'; $('liveDot').className = 'live-dot'; btns.forEach(b => b.disabled = true); guide.connected = false; updateGuide(); };
+})();
+</script>
+</body>
+</html>
