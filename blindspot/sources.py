@@ -96,6 +96,7 @@ class LSLSource:
         self.inlet.open_stream(timeout=10)
         # LSL clock -> wall clock, so trial times line up with time.time()
         self._offset = time.time() - self._local_clock()
+        self._remap = None  # set if the sender stamps on its own clock
 
     def read_new(self):
         samples, stamps = self.inlet.pull_chunk(timeout=0.0, max_samples=4096)
@@ -103,8 +104,26 @@ class LSLSource:
             return np.zeros((self.n, 0)), np.zeros(0)
         x = np.asarray(samples, dtype=float).T[self.rows]
         corr = self.inlet.time_correction(timeout=1.0)
-        ts = np.asarray(stamps) + corr + self._offset
-        return x, ts
+        ts = np.asarray(stamps) + corr
+        # g.Pype 4.x's LSLSender stamps samples with its own clock instead of
+        # LSL's local_clock() (seen on macOS: ~12 days apart). Then no sample
+        # falls inside any trial window and every run stops at step 1 with
+        # "fewer than 2 sensors". If the newest stamp is far from "now", map
+        # the sender's clock onto ours, keeping its (exact) sample spacing.
+        # Bluetooth delivers in bursts up to ~0.7 s late, so the offset is the
+        # SMALLEST lag seen (the most prompt chunk), allowed to creep up only
+        # very slowly for real clock drift. A jump of more than 3 s (e.g. the
+        # sender's clock restarting after a reconnect) starts it over.
+        lag = self._local_clock() - ts[-1]
+        if self._remap is None and abs(lag) > 5.0:
+            self._remap = lag
+        if self._remap is not None:
+            if abs(lag - self._remap) > 3.0 or lag < self._remap:
+                self._remap = lag
+            else:
+                self._remap += 0.001 * (lag - self._remap)
+            ts = ts + self._remap
+        return x, ts + self._offset
 
     def set_stimulus(self, left: float, right: float, attend=None):
         pass
