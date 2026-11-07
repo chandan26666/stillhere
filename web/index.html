@@ -114,7 +114,7 @@
   @keyframes pl { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
   .flow { stroke-dasharray: 3 7; animation: flow 1.6s linear infinite; }
   @keyframes flow { to { stroke-dashoffset: -20; } }
-  @media (max-width: 980px) { .hero, .rules, .two, .stats3, .steps3 { grid-template-columns: 1fr; } .hero h1 { font-size: 40px; } }
+  @media (max-width: 980px) { .hero, .rules, .two, .stats3, .steps3 { grid-template-columns: 1fr !important; } .hero h1 { font-size: 40px; } }
   @media (prefers-reduced-motion: reduce) { .pulseL, .pulseR, .tintL, .tintR, .flow { animation: none; } }
 
   header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 16px 28px; border-bottom: 1px solid var(--line); }
@@ -266,6 +266,50 @@
 
   @media (max-width: 1150px) { .grid { grid-template-columns: 1fr 1fr; } .grid .sig-card { grid-column: 1 / -1; order: -1; } }
   @media (max-width: 760px) { .grid, .why, .res-main, .kv { grid-template-columns: 1fr; } }
+
+  /* first-timer guide strip */
+  .guide { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 18px 28px 0; }
+  .gstep { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--panel); }
+  .gstep i { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 700 14px var(--font-display); font-style: normal; border: 1.5px solid var(--line-strong); color: var(--muted); }
+  .gstep b { display: block; font: 700 14px var(--font-body); }
+  .gstep span { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+  .gstep.done i { background: var(--good); border-color: var(--good); color: #06210f; }
+  .gstep.warn i { background: var(--warn); border-color: var(--warn); color: #2a1f00; }
+  .gstep.now { border-color: rgba(124,156,255,.6); box-shadow: 0 0 0 1px rgba(124,156,255,.25); }
+  .what { font-size: 12.5px; color: var(--muted); line-height: 1.45; margin: -4px 0 10px; }
+  .blk { border-top: 1px solid var(--line); padding: 12px 0 10px; }
+  .blk:first-of-type { border-top: 0; padding-top: 0; }
+  .bh { font: 600 11px var(--font-display); letter-spacing: .16em; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+  .bh span { text-transform: none; letter-spacing: 0; font: 11.5px var(--font-body); }
+  .hint { font-size: 12px; color: var(--muted); line-height: 1.45; margin: -2px 0 10px; }
+  .tbtn { display: block; width: 100%; text-align: left; margin: 0 0 8px; padding: 11px 14px; border-radius: 8px; cursor: pointer; color: var(--text);
+          border: 1px solid var(--line-strong); background: rgba(255,255,255,.03); font: 12.5px var(--font-body); line-height: 1.4; }
+  .tbtn b { display: block; font: 700 15px var(--font-display); letter-spacing: .04em; margin-bottom: 2px; }
+  .tbtn span { color: var(--muted); }
+  .tbtn:hover:not(:disabled) { background: rgba(124,156,255,.08); }
+  .tbtn.chk { border-left: 4px solid var(--good); } .tbtn.cmd { border-left: 4px solid var(--brand); }
+  .tbtn.ynt { border-left: 4px solid #2fa6c4; } .tbtn.ec { border-left: 4px solid #9a82ff; }
+  /* instructions before a test */
+  #intro { position: fixed; inset: 0; z-index: 20; display: none; overflow: auto; background: rgba(4,8,20,.92); backdrop-filter: blur(6px); }
+  #intro.on { display: block; }
+  .ibox { max-width: 1100px; margin: 5vh auto; background: var(--panel); border: 1px solid var(--line-strong); border-radius: 14px; padding: 30px 34px; }
+  .itop { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+  .itop h2 { font: 700 34px var(--font-display); margin: 6px 0 4px; }
+  .itime { color: var(--muted); font-size: 14px; }
+  .icols { display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; margin-top: 22px; }
+  .ih { font: 600 12px var(--font-display); letter-spacing: .16em; color: var(--brand); text-transform: uppercase; margin-bottom: 12px; }
+  #iSubject { margin: 0; padding-left: 22px; display: grid; gap: 10px; font-size: 17px; line-height: 1.5; color: var(--text); }
+  #iSubject li::marker { color: var(--brand); font-weight: 700; }
+  .ichk { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .ichk label { display: grid; grid-template-columns: 22px 1fr; gap: 8px; font-size: 14.5px; line-height: 1.45; color: #c9d2f2; cursor: pointer; }
+  .ichk input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--brand); }
+  .ichk .must { color: var(--warn); }
+  .iwatch { margin-top: 16px; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-size: 13.5px; line-height: 1.5; color: #c9d2f2; background: #0b1430; }
+  .iwatch b { color: var(--text); }
+  .ifoot { display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 24px; border-top: 1px solid var(--line); padding-top: 18px; }
+  .ifoot .go { width: auto; margin: 0; padding: 14px 30px; }
+  .iwarn { color: var(--warn); font-size: 13.5px; }
+  @media (max-width: 980px) { .guide { grid-template-columns: 1fr 1fr; } .icols { grid-template-columns: 1fr; } }
   @media (prefers-reduced-motion: reduce) { .live-dot.on { animation: none; } .lr i { transition: none; } }
   .brainkey { display: flex; justify-content: space-between; gap: 8px; font: 11.5px var(--font-mono); color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
   .brainkey b.l { color: var(--left); font-weight: 600; } .brainkey b.r { color: var(--right); font-weight: 600; }
@@ -289,7 +333,7 @@
 <div id="topbar">
   <header class="top">
     <div class="lhs"><div class="logo"><i class="tri"></i><b>STILLHERE</b><span>/ NEURAL AWARENESS</span></div>
-      <nav class="nav"><button id="navAbout" class="on">About</button><button id="navDemo">Live demo</button></nav></div>
+      <nav class="nav"><button id="navAbout" class="on">1 · About</button><button id="navDemo">2 · Live demo</button></nav></div>
     <div class="status">
       <span><i class="live-dot" id="liveDot"></i><em id="srcName">Not connected</em></span>
       <span>EEG <em id="chInfo">-</em></span>
@@ -392,43 +436,70 @@
     </div>
   </section>
 
+  <section class="sec" id="use">
+    <div class="kicker">Using this app</div>
+    <h2>How to run it, in 4 steps</h2>
+    <div class="steps3" style="grid-template-columns:repeat(4,1fr)">
+      <div class="step3"><span class="num">1</span><h3>Put the headset on</h3><p>Sensors on the back of the head, hair parted under each one. The README explains how to connect it.</p></div>
+      <div class="step3"><span class="num">2</span><h3>Open the live demo</h3><p>Click <b>Live demo</b> at the top. A checklist across the top shows what's done and what's next.</p></div>
+      <div class="step3"><span class="num">3</span><h3>Run the headset check</h3><p>The person looks left, then right. If the bars swap, the headset is picking up the signal.</p></div>
+      <div class="step3"><span class="num">4</span><h3>Pick a test</h3><p>Each test shows instructions to read out loud and a short checklist before it starts. Results come at the end.</p></div>
+    </div>
+  </section>
+
   <section class="endcta"><h2>Try the demo</h2><button class="go" data-go="home">Open the live demo</button></section>
 </div></div>
 
 <div id="panel" class="hidden">
 
+  <div class="guide">
+    <div class="gstep" id="g1"><i>1</i><div><b>Connect the headset</b><span id="gs1">Waiting for the app to connect...</span></div></div>
+    <div class="gstep" id="g2"><i>2</i><div><b>Check the sensors</b><span id="gs2">Dots on the brain should be green.</span></div></div>
+    <div class="gstep" id="g3"><i>3</i><div><b>Run the headset check</b><span id="gs3">Look left, then right. The bars should swap.</span></div></div>
+    <div class="gstep" id="g4"><i>4</i><div><b>Run a test</b><span id="gs4">Pick one on the right. Instructions come first.</span></div></div>
+  </div>
+
   <div class="grid">
     <section class="card">
       <h2>Brain view <small id="mapNote">top view, nose up</small></h2>
+      <p class="what">The dots are the sensors. <b style="color:var(--good)">Green</b> = touching the head, <b style="color:var(--warn)">yellow</b> = flat (not touching), <b style="color:var(--bad)">red</b> = noisy (loose or moving). When the screen flickers, the back of the brain glows.</p>
       <svg id="headmap" viewBox="0 0 200 222" role="img" aria-label="Top view of the brain showing sensor positions, contact quality and visual cortex response"><g id="hmStatic"></g><g id="hmDyn"></g></svg>
       <div class="brainkey"><span><b class="l">Left screen</b> → right visual cortex</span><span><b class="r">Right screen</b> → left</span></div>
       <div class="legend">
-        <div><span><i style="background:var(--good)"></i>contact ok</span><span><i style="background:var(--warn)"></i>flat</span><span><i style="background:var(--bad)"></i>noisy</span></div>
-        <div><span>Glow on the back = response at each flicker rate</span></div>
+        <div><span><i style="background:var(--good)"></i>good</span><span><i style="background:var(--warn)"></i>flat</span><span><i style="background:var(--bad)"></i>noisy</span></div>
       </div>
     </section>
 
     <section class="card sig-card">
-      <h2>Live signal <small id="sigNote">filtered 3-40 Hz · 4 s</small></h2>
+      <h2>Live brain waves <small id="sigNote">last 4 seconds</small></h2>
+      <p class="what">One line per sensor. Wavy is good. A flat line means that sensor isn't touching. Big jumps usually mean blinking, jaw clenching or moving.</p>
       <canvas id="trace"></canvas>
       <div class="spec">
-        <h2>Spectrum <small>average of good channels</small></h2>
+        <h2>Which speeds are in the signal <small>spectrum</small></h2>
+        <p class="what">When the screen flickers, the <b class="l" style="color:var(--left)">cyan</b> bar (left side) and <b style="color:var(--right)">amber</b> bar (right side) should stick up. With eyes closed you'll see a hump around 10 Hz (alpha).</p>
         <canvas id="spec"></canvas>
-        <div class="freqtags"><span><b class="l">▮</b> Left stimulus <b class="l" id="fL">8.57 Hz</b></span><span><b class="r">▮</b> Right stimulus <b class="r" id="fR">12.00 Hz</b></span></div>
+        <div class="freqtags"><span><b class="l">▮</b> Left side flicker <b class="l" id="fL">8.57 Hz</b></span><span><b class="r">▮</b> Right side flicker <b class="r" id="fR">12.00 Hz</b></span></div>
       </div>
     </section>
 
     <section class="card">
-      <h2>Session</h2>
-      <div class="field"><label for="pid">Patient ID</label><input id="pid" value="DEMO-01" autocomplete="off"></div>
-      <div class="field"><label for="exam">Examiner</label><input id="exam" placeholder="Name" autocomplete="off"></div>
-      <ol class="proto">
-        <li><span class="n">01</span><div><div class="t">Visual response</div><div class="d">Both sides flicker, then the screen goes blank. We check that the brain picks up both flickers.</div></div></li>
-        <li><span class="n">02</span><div><div class="t">Command following</div><div class="d">A voice says "focus on the left side" (or right). Only the EEG is used to decide which side they focused on. If step 01 fails, the test stops and shows no score. <b class="barinfo">12 commands: 6 left, 6 right, shuffled.</b></div></div></li>
-        <li><span class="n">03</span><div><div class="t">Fixed bar</div><div class="d">Pass mark is 10 of 12, set before the test starts (p = 0.040). Two passes in a row means refer. <span class="barinfo" id="barInfo"></span> <span style="white-space:nowrap"><input type="number" id="dur" value="10" min="6" max="15" aria-label="Seconds per trial">s per trial</span></div></div></li>
-      </ol>
-      <div class="field" style="grid-template-columns:1fr;margin-top:12px"><label for="qs">Yes / No test · known-answer questions (question | yes/no). The server draws 6 YES and 6 NO and shuffles them.</label>
-        <textarea class="qs" id="qs" spellcheck="false">Is the sky blue? | yes
+      <h2>Run a test</h2>
+      <div class="blk">
+        <div class="bh">Who is being tested</div>
+        <div class="field"><label for="pid">Patient ID</label><input id="pid" value="DEMO-01" autocomplete="off"></div>
+        <p class="hint">Use a new ID for each person. Each ID gets one scored test every 12 hours.</p>
+        <div class="field"><label for="exam">Examiner</label><input id="exam" placeholder="Your name" autocomplete="off"></div>
+        <div class="field"><label for="dur">Seconds per turn</label><input type="number" id="dur" value="10" min="6" max="15"></div>
+        <p class="hint">8 to 10 is good. Fewer seconds is faster but the signal is weaker.</p>
+      </div>
+      <div class="blk">
+        <div class="bh">Pick a test <span>(you'll see instructions before it starts)</span></div>
+        <button class="tbtn chk" id="bCheck"><b>Headset check</b><span>1 min · not scored · look left, then right, and check the bars swap. Do this first.</span></button>
+        <button class="tbtn cmd" id="bAware"><b>Command test</b><span>about 4 min · scored · "focus on the left side", with eyes still on the dot</span></button>
+        <button class="tbtn ynt" id="bYN"><b>Yes / No test</b><span>about 4 min · scored · answer easy questions: focus left for yes, right for no</span></button>
+        <details class="more" style="margin:2px 0 8px"><summary>Edit the yes/no questions</summary>
+          <p class="hint" style="margin-top:6px">One per line: question | yes or no. Needs at least 6 of each. <span class="barinfo" id="barInfo"></span></p>
+          <textarea class="qs" id="qs" spellcheck="false">Is the sky blue? | yes
 Are we in Paris right now? | no
 Do fish live in water? | yes
 Is fire cold? | no
@@ -439,20 +510,36 @@ Can a dog fly? | no
 Do birds have feathers? | yes
 Is ice hot? | no
 Is the sun bright? | yes
-Do cars grow on trees? | no</textarea></div>
-      <div class="modes"><button class="go" id="bAware">Command test</button><button class="go alt" id="bYN">Yes / No test</button>
-        <button class="go ec" id="bEC" style="grid-column:1 / -1">Eyes-closed test (mental math)</button></div>
-      <p class="fine" style="margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.45">Eyes-closed test: no flicker. 12 spoken commands, 6 "count backwards by sevens" and 6 "just relax", random order. Alpha waves at the back of the head usually drop during mental math. Same pass mark and rules.</p>
-      <div class="sub"><button class="ghost" id="bCheck">Headset check</button><button class="ghost" id="bFull">Full screen</button></div>
-      <details class="more"><summary>Visual field tests</summary>
+Do cars grow on trees? | no</textarea>
+        </details>
+        <button class="tbtn ec" id="bEC"><b>Eyes-closed test</b><span>about 4 min · scored · no screen: mental math vs relax, eyes closed the whole time</span></button>
+      </div>
+      <div class="blk">
+        <div class="bh">How scoring works</div>
+        <p class="hint" style="margin:0">12 turns. Pass at 10 or more (guessing gets about 6). One pass means "test again later". Two passes in a row means "refer". Bad signal means no score at all.</p>
+      </div>
+      <p class="sitting" id="sitInfo"></p>
+      <div class="sub" style="margin-top:4px"><button class="ghost" id="bFull">Full screen</button></div>
+      <details class="more"><summary>Advanced: old visual-field experiments (not part of StillHere)</summary>
         <div class="sub"><button class="ghost" id="bCal">Calibrate</button><button class="ghost" id="bTest">Blinded L/R</button><button class="ghost" id="bCon">Contrast</button></div>
       </details>
-      <p class="sitting" id="sitInfo"></p>
-      <p class="caution">This screen flashes at 8.57 Hz and 12 Hz. Flicker from 3 to 60 Hz can trigger seizures in people with photosensitive epilepsy; 15 to 20 Hz is the most provocative. It is not risk-free. Do not start if you have photosensitive epilepsy or if flickering light has made you unwell. Stop if you feel discomfort.</p>
+      <p class="caution">The flicker tests flash at 8.57 Hz and 12 Hz. Flicker from 3 to 60 Hz can trigger seizures in people with photosensitive epilepsy; 15 to 20 Hz is the most provocative. It is not risk-free. Do not start if you have photosensitive epilepsy or if flickering light has made you unwell. Stop if you feel discomfort.</p>
     </section>
 
   </div>
 </div>
+
+<div id="intro"><div class="ibox">
+  <div class="itop"><div><div class="kicker" id="iKick">Before you start</div><h2 id="iTitle">Command test</h2><div class="itime" id="iTime"></div></div>
+    <button class="ghost" id="iCancel" style="flex:0 0 auto">Cancel</button></div>
+  <div class="icols">
+    <div class="icol"><div class="ih">Read this to the person wearing the headset</div><ol id="iSubject"></ol>
+      <button class="ghost" id="iRead" style="flex:0 0 auto;margin-top:6px">Read it out loud for me</button></div>
+    <div class="icol"><div class="ih">Your checklist</div><ul id="iOperator" class="ichk"></ul>
+      <div id="iWatch" class="iwatch"></div></div>
+  </div>
+  <div class="ifoot"><span id="iWarn" class="iwarn"></span><button class="go" id="iStart">Start test</button></div>
+</div></div>
 
 <div id="results"><div class="res" id="resBody"></div></div>
 <div id="print"></div>
@@ -720,10 +807,10 @@ Do cars grow on trees? | no</textarea></div>
   }
 
   // ---------- HUD ----------
-  const STEP = { 'awareness-step1': 'STEP 01 // VISUAL RESPONSE', 'awareness-step2': 'STEP 02 // COMMAND FOLLOWING', 'answers-step1': 'STEP 01 // VISUAL RESPONSE', 'answers-step2': 'STEP 02 // YES / NO ANSWERS', 'eyesclosed-step1': 'STEP 01 // EYES-CLOSED ALPHA', 'eyesclosed-step2': 'STEP 02 // MENTAL MATH VS REST', calibrate: 'CALIBRATION', test: 'BLINDED LEFT / RIGHT', contrast: 'CONTRAST CURVE', check: 'HEADSET CHECK' };
+  const STEP = { 'awareness-step1': 'PART 1 OF 2 · SIGNAL CHECK', 'awareness-step2': 'PART 2 OF 2 · FOCUS LEFT / RIGHT', 'answers-step1': 'PART 1 OF 2 · SIGNAL CHECK', 'answers-step2': 'PART 2 OF 2 · YES / NO QUESTIONS', 'eyesclosed-step1': 'PART 1 OF 2 · EYES-CLOSED SIGNAL CHECK', 'eyesclosed-step2': 'PART 2 OF 2 · MENTAL MATH OR RELAX', calibrate: 'CALIBRATION', test: 'BLINDED LEFT / RIGHT', contrast: 'CONTRAST CURVE', check: 'HEADSET CHECK' };
   function hudSet(m) {
     $('hStep').textContent = STEP[m.mode] || 'RUNNING';
-    $('hCount').textContent = m.mode === 'check' ? 'ESC TO STOP' : `${m.i + 1} / ${m.n}${plan ? ` · PLANNED ${plan.n} · BAR ${plan.bar}` : ''}`;
+    $('hCount').textContent = m.mode === 'check' ? 'ESC TO STOP' : `TURN ${m.i + 1} OF ${m.n}${plan ? ` · PASS AT ${plan.bar}` : ''} · ESC TO STOP`;
     $('hSegs').innerHTML = m.mode === 'check' ? '<i class="now"></i>' : Array.from({ length: m.n }, (_, j) => `<i class="${j < m.i ? 'done' : j === m.i ? 'now' : ''}"></i>`).join('');
   }
   function hudCmd(main, sub, side) { const el = $('hCmd'); if (!main) { el.style.display = 'none'; return; }
@@ -756,8 +843,8 @@ Do cars grow on trees? | no</textarea></div>
     if (ec) { hudCmd(m.command === 'math' ? 'COUNT BACKWARDS' : 'RELAX', `${m.prompt || ''} · eyes closed, no movement`); if (m.prompt) speak(m.prompt); wait = m.command === 'math' ? 4500 : 3000; }
     else if (m.question) { hudCmd(m.question, 'Answer by focusing on ◀ YES or NO ▶ · eyes stay on the red dot'); speak(`${m.question} Focus on yes, or no.`); wait = 4500; }
     else if (m.command) { const L = m.command === 'left'; hudCmd(L ? '◀ FOCUS LEFT' : 'FOCUS RIGHT ▶', 'Eyes stay on the red dot', L ? 'L' : 'R'); speak(`Focus on the ${m.command} side.`); wait = 3000; }
-    else if (m.mode === 'awareness-step1' || m.mode === 'answers-step1') hudCmd(m.left > 0 ? 'EYES OPEN' : 'BLANK SCREEN', 'Visual response check');
-    else if (m.mode === 'check') hudCmd('HEADSET CHECK', 'Look at the red dot');
+    else if (m.mode === 'awareness-step1' || m.mode === 'answers-step1') hudCmd('JUST LOOK AT THE RED DOT', m.left > 0 ? 'Checking that we can pick up the flicker' : 'Gray screen, for comparison');
+    else if (m.mode === 'check') hudCmd('HEADSET CHECK', 'Look at the red dot, then "left", then "right". Watch the bars at the bottom.');
     else hudCmd('LOOK AT THE DOT');
     setTimeout(() => { if (state !== 'prep') return; hudCmd(null); if (ec) hudMsg(m.command === 'math' ? 'Counting backwards... (eyes closed)' : 'Relaxing... (eyes closed)'); frame = 0; framesTotal = Math.round(m.duration * refresh); state = 'flicker'; send({ type: 'trial_started', i: m.i }); }, wait);
   }
@@ -775,8 +862,9 @@ Do cars grow on trees? | no</textarea></div>
       $('srcName').textContent = m.source === 'sim' ? 'Simulated EEG' : m.source === 'lsl' ? 'BCI Core · g.Pype' : `Headset · ${m.source}`;
       $('liveDot').className = 'live-dot on'; $('chInfo').textContent = `${m.channels.length} ch · ${m.fs} Hz`;
       if (m.min_gap_h != null) { minGap = m.min_gap_h; sitText(); }
+      guide.connected = true; updateGuide();
       btns.forEach(b => b.disabled = false);
-    } else if (m.type === 'trace') { if (state === 'idle' && !panel.classList.contains('hidden')) drawAll(m); else lastTrace = m;
+    } else if (m.type === 'trace') { guide.total = m.names.length; guide.sensors = m.names.filter(n => m.quality[n] === 'ok').length; updateGuide(); if (state === 'idle' && !panel.classList.contains('hidden')) drawAll(m); else lastTrace = m;
     } else if (m.type === 'trial') { startTrial(m);
     } else if (m.type === 'live') { if (trial && trial.mode.startsWith('eyesclosed')) return; if (m.score) hudMeter(m.score.snr); else hudMsg(`Collecting data... ${m.n_samples} samples`);
     } else if (m.type === 'trial_done') { hudMeter(null);
@@ -784,7 +872,10 @@ Do cars grow on trees? | no</textarea></div>
       setTimeout(() => { hudMsg(''); send({ type: 'ready' }); }, 3000);
     } else if (m.type === 'plan') { plan = m;
     } else if (m.type === 'step1_done') { hudMeter(null); hudMsg(trial && trial.mode.startsWith('eyesclosed') ? (m.visual_on ? 'Alpha rhythm found' : 'No clear alpha rhythm · stopping') : m.visual_on ? 'Visual pathway confirmed' : 'Visual pathway not confirmed · stopping');
-    } else if (m.type === 'summary') { hudMsg(''); showSummary(m); }
+    } else if (m.type === 'summary') { hudMsg('');
+      if (m.mode === 'check') guide.checked = true;
+      if (['awareness', 'answers', 'eyesclosed'].includes(m.mode) && m.outcome) guide.tested = true;
+      updateGuide(); showSummary(m); }
   }
 
   function ring(frac, color) {
@@ -874,7 +965,7 @@ Do cars grow on trees? | no</textarea></div>
     }
     $('resBody').innerHTML = html; view('results');
     const arc = $('ringArc'); if (arc) requestAnimationFrame(() => requestAnimationFrame(() => arc.setAttribute('stroke-dashoffset', arc.dataset.target)));
-    $('again').onclick = () => run(m.mode);
+    $('again').onclick = () => INTRO[m.mode] ? (view('home'), openIntro(m.mode)) : run(m.mode);
     $('home').onclick = () => view('home');
     if ($('prt')) $('prt').onclick = () => window.print();
   }
@@ -899,16 +990,100 @@ Do cars grow on trees? | no</textarea></div>
     await setupScreen();
     send({ type: 'run', mode, duration: +$('dur').value, questions: mode === 'answers' ? parseQs() : [],
            patient: $('pid').value.trim(), sitting }); }
+
+  // ---------- Instructions shown before each test ----------
+  const FLICKER_SAFETY = 'They have <b>no history of seizures or epilepsy</b>, and flickering lights have never made them unwell. <span class="must">(required)</span>';
+  const SETUP = ['They sit back 50 to 60 cm from the screen, with the red dot at eye level.', 'The room is dim and quiet, phones away, volume up.'];
+  const INTRO = {
+    check: { title: 'Headset check', time: () => 'About 1 minute · not scored · press Esc when done',
+      subject: ['Keep your eyes on the red dot in the middle to start.',
+                'When I say "left", look straight at the left half of the screen. When I say "right", look straight at the right half.',
+                'Try not to blink while it flickers. Relax your jaw and shoulders.',
+                'Say "stop" anytime and I\'ll stop it.'],
+      checks: [...SETUP], safety: true,
+      watch: '<b>What to watch:</b> the meter at the bottom. When they look left, the <b style="color:var(--left)">cyan</b> bar should grow. When they look right, the <b style="color:var(--right)">amber</b> bar should grow. Around <b>2 or more</b> on the side they look at is good. Around 1 means fix the sensors first.' },
+    awareness: { title: 'Command test', time: () => `About ${est(3, 12)} minutes · scored · 12 turns`,
+      subject: ['This takes about {T} minutes. Just sit still and listen. No moving, talking or pressing anything. The headset only listens.',
+                'Keep your eyes on the red dot the whole time. Don\'t look at the sides, someone will be watching your eyes.',
+                'For the first minute, just look at the dot. We\'re checking we can pick up your signal.',
+                'Then a voice says "focus on the left side" or "the right side". Keep looking at the dot, but put your attention on that side, like a spotlight, or like noticing someone waving at the edge of your vision.',
+                'Hold it until the flicker stops. If your mind wanders, bring it back. Left and right are mixed up, so don\'t guess ahead.',
+                'Try not to blink while it flickers. Blink and relax when the screen goes gray.',
+                'Quick practice now: look at the dot. Without moving your eyes, notice the left side. Now the right. That\'s all it is.'],
+      checks: ['This is a new patient ID: <b>{PID}</b>', ...SETUP, 'Someone can watch their eyes during the test.'], safety: true,
+      watch: '<b>What you\'ll see:</b> first 3 short screens (flicker, gray, flicker). Then 12 turns, each with a big FOCUS LEFT or FOCUS RIGHT card and the voice. The meter at the bottom should lean a little toward the side that was asked. At the end you get the result.' },
+    answers: { title: 'Yes / No test', time: () => `About ${est(3, 12)} minutes · scored · 12 questions`,
+      subject: ['This takes about {T} minutes. Just sit still and listen. No moving or talking.',
+                'Keep your eyes on the red dot the whole time. The left half means YES, the right half means NO.',
+                'You\'ll hear easy questions, like "Is the sky blue?". To answer, keep looking at the dot and put your attention on the YES side or the NO side.',
+                'Hold your answer until the flicker stops. Try not to blink while it flickers.',
+                'For the first minute, just look at the dot.',
+                'Quick practice now: look at the dot. Think "yes" by noticing the left side. Think "no" by noticing the right side.'],
+      checks: ['This is a new patient ID: <b>{PID}</b>', ...SETUP, 'The question list has at least 6 yes and 6 no questions.'], safety: true,
+      watch: '<b>What you\'ll see:</b> 3 short check screens, then 12 questions with YES and NO labels on the sides. The meter should lean toward the right answer\'s side. At the end you get the result.' },
+    eyesclosed: { title: 'Eyes-closed test', time: () => `About ${est(2, 12)} minutes · scored · 12 turns · no flicker`,
+      subject: ['This takes about {T} minutes. Keep your eyes closed the whole time. Nothing to look at, just listen.',
+                'First, about 20 seconds of just relaxing with your eyes closed.',
+                'Then the voice says either "count backwards from a number by sevens" (like 734, 727, 720) or "just relax, don\'t count anything".',
+                'When it says count, really try, and keep going until it stops. Do it in your head with your lips and jaw still.',
+                'When it says relax, let your mind go quiet. No math, no planning.',
+                'Stay still with your eyes closed, even between turns. Say "stop" anytime.'],
+      checks: ['This is a new patient ID: <b>{PID}</b>', 'They sit back comfortably. The room is quiet, volume up.', 'They understand they keep their eyes closed the whole time.'], safety: false,
+      watch: '<b>What you\'ll see:</b> the screen shows COUNT BACKWARDS or RELAX for you, and the voice tells them. Their alpha waves (the hump around 10 Hz) should get smaller during counting. At the end you get the result.' },
+  };
+  function est(step1, n) { const d = +$('dur').value || 10, per = d + 6.5; return Math.round(((step1 + n) * per) / 60); }
+  let introMode = null;
+  function openIntro(mode) {
+    const I = INTRO[mode]; if (!I) return run(mode);
+    introMode = mode;
+    const T = I.time(), mins = (T.match(/About (\d+)/) || [])[1] || '';
+    $('iTitle').textContent = I.title; $('iTime').textContent = T;
+    $('iSubject').innerHTML = I.subject.map(x => `<li>${esc(x.replace('{T}', mins))}</li>`).join('');
+    const items = I.checks.map(x => x.replace('{PID}', esc($('pid').value.trim() || '(enter one first)')));
+    if (I.safety) items.unshift(FLICKER_SAFETY);
+    $('iOperator').innerHTML = items.map((x, i) => `<li><label><input type="checkbox" data-req="${I.safety && i === 0 ? 1 : 0}"><span>${x}</span></label></li>`).join('');
+    $('iWatch').innerHTML = I.watch;
+    $('iOperator').querySelectorAll('input').forEach(c => c.onchange = introCheck); introCheck();
+    $('intro').classList.add('on');
+  }
+  function introCheck() {
+    const req = [...$('iOperator').querySelectorAll('input[data-req="1"]')].every(c => c.checked);
+    const pidOk = introMode === 'check' || !!$('pid').value.trim();
+    $('iStart').disabled = !(req && pidOk);
+    $('iWarn').textContent = !pidOk ? 'Enter a patient ID first.' : !req ? 'Tick the safety line to start.' : 'Opens full screen. Press Esc anytime to stop.';
+  }
+  function closeIntro() { $('intro').classList.remove('on'); try { speechSynthesis.cancel(); } catch (e) {} }
+  $('iCancel').onclick = closeIntro;
+  $('iRead').onclick = () => speak([...$('iSubject').querySelectorAll('li')].map(li => li.textContent).join(' '));
+  $('iStart').onclick = async () => {
+    const mode = introMode; closeIntro();
+    try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); } catch (e) {}
+    setTimeout(() => run(mode), 600);
+  };
+
+  // ---------- First-timer guide strip ----------
+  const guide = { connected: false, sensors: 0, total: 0, checked: false, tested: false };
+  function setStep(id, cls, text) { const el = $(id); el.classList.remove('done', 'warn', 'now'); if (cls) el.classList.add(cls); if (text) $('gs' + id.slice(1)).textContent = text; }
+  function updateGuide() {
+    setStep('g1', guide.connected ? 'done' : 'now', guide.connected ? `Connected: ${$('srcName').textContent}` : 'Waiting for the app to connect...');
+    const allOk = guide.total && guide.sensors === guide.total, enough = guide.sensors >= 2;
+    setStep('g2', !guide.connected ? '' : allOk ? 'done' : enough ? 'warn' : 'now',
+      !guide.total ? 'Dots on the brain should be green.' : `${guide.sensors} of ${guide.total} sensors touching${allOk ? '.' : enough ? '. OK, but better if all are green.' : '. Part the hair under the others.'}`);
+    setStep('g3', guide.checked ? 'done' : guide.connected && enough ? 'now' : '', guide.checked ? 'Done. Run it again anytime.' : 'Look left, then right. The bars should swap.');
+    setStep('g4', guide.tested ? 'done' : guide.checked ? 'now' : '', guide.tested ? 'Done. Use a new patient ID for the next one.' : 'Pick one on the right. Instructions come first.');
+  }
+  updateGuide();
+
   $('qs').addEventListener('input', updateBar); updateBar();
-  $('bAware').onclick = () => run('awareness');
-  $('bEC').onclick = () => run('eyesclosed');
-  $('bYN').onclick = () => run('answers');
-  $('bCheck').onclick = () => run('check');
+  $('bAware').onclick = () => openIntro('awareness');
+  $('bEC').onclick = () => openIntro('eyesclosed');
+  $('bYN').onclick = () => openIntro('answers');
+  $('bCheck').onclick = () => openIntro('check');
   $('bCal').onclick = () => run('calibrate');
   $('bTest').onclick = () => run('test');
   $('bCon').onclick = () => run('contrast');
   $('bFull').onclick = async () => { try { await document.documentElement.requestFullscreen(); } catch (e) {} setTimeout(setupScreen, 800); };
-  addEventListener('keydown', e => { if (e.key === 'Escape') { if (state === 'flicker') endTrial(); else if (state === 'prep') state = 'rest'; send({ type: 'stop' }); } });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && $('intro').classList.contains('on')) { closeIntro(); return; } if (e.key === 'Escape') { if (state === 'flicker') endTrial(); else if (state === 'prep') state = 'rest'; send({ type: 'stop' }); } });
 
   $('navAbout').onclick = () => view('about');
   $('navDemo').onclick = () => view('home');
@@ -920,7 +1095,7 @@ Do cars grow on trees? | no</textarea></div>
   ws = new WebSocket(`ws://${location.host}/ws`);
   ws.onopen = () => setupScreen();
   ws.onmessage = e => onMessage(JSON.parse(e.data));
-  ws.onclose = () => { $('srcName').textContent = 'Disconnected · restart server and reload'; $('liveDot').className = 'live-dot'; btns.forEach(b => b.disabled = true); };
+  ws.onclose = () => { $('srcName').textContent = 'Disconnected · restart server and reload'; $('liveDot').className = 'live-dot'; btns.forEach(b => b.disabled = true); guide.connected = false; updateGuide(); };
 })();
 </script>
 </body>

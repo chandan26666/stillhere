@@ -76,7 +76,7 @@ Every line should say `OK`. It checks Python, the packages, the bundled fonts, a
 python -m blindspot.server --source sim --min-gap-hours 0
 ```
 
-Open **http://localhost:8765** in **Chrome** (Safari can cap the frame rate, and the safety check will stop the run). It opens on the **About** page; click **Live demo** for the console. Press **Ctrl+C** in the terminal to stop the server.
+Open **http://localhost:8765** in **Chrome** (Safari can cap the frame rate, and the safety check will stop the run). It opens on the **About** page; click **Live demo** at the top. A 4-step checklist across the top of the demo page shows what's done and what to do next (connect, check sensors, headset check, run a test). Press **Ctrl+C** in the terminal to stop the server.
 
 `--min-gap-hours 0` turns off the one-run-per-12-hours rule so you can practice. To see each result screen, restart with one of these:
 
@@ -122,7 +122,7 @@ The scripts open the headset with 4 channels and our serial, so they never grab 
    python -m blindspot.server --source lsl
    ```
 2. Use a **fresh Patient ID** (one scored run per patient every 12 hours).
-3. Click **Full screen**, then **Command test**, **Yes / No test**, or **Eyes-closed test**.
+3. Pick **Command test**, **Yes / No test**, or **Eyes-closed test**. Each one first opens an instructions screen: what to read to the person (there's a "Read it out loud for me" button), a short checklist, and a required safety tick for the flicker tests. **Start test** opens full screen.
 4. Show the failures on purpose: eyes closed gives "Not interpretable"; ignoring the voice or always attending left gives "No conclusion".
 5. **Print report** prints the sheet with every run for that patient.
 
